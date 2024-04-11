@@ -1,7 +1,7 @@
 # Julia
 This folder contains the Julia implementation of `PGopt`, which does not require proprietary software. The open-source solver [Altro](https://github.com/RoboticExplorationLab/Altro.jl) is used for the optimization. The results presented in the paper were generated with this version, and the software reproduces these results exactly.
 
-**Please note that this version has several limitations: only cost functions of the form $J_H=\sum_{t=0}^H \frac{1}{2} u_t R u_t$, measurement functions of the form $y=x_{1:n_y}$, and output constraints of the form $y_\mathrm{min} \leq y \leq y_\mathrm{max}$ are supported.**
+**Please note that this version has several limitations: only cost functions of the form $J_H=\sum\nolimits_{t=0}^H \frac{1}{2} u_t R u_t$, measurement functions of the form $y=x_{1:n_y}$, and output constraints of the form $y_\mathrm{min} \leq y \leq y_\mathrm{max}$ are supported.**
 
 To execute the code, install [Julia](https://julialang.org/) and download all the necessary packages via the package manager. Then execute the scripts `autocorrelation.jl`, `PG_OCP_known_basis_functions.jl`, or `PG_generic_basis_functions.jl`.
 
