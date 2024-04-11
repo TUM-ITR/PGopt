@@ -8,7 +8,7 @@ Two versions of the algorithm are currently available: a Julia version and a MAT
 
 ## Julia
 
-In order to ensure the reproducibility of the results presented in the paper without reliance on proprietary software, a Julia version using the [Altro](https://github.com/RoboticExplorationLab/Altro.jl) solver is provided. This version was used for the results presented in the paper and reproduces them exactly. However, this version has some limitations: only cost functions of the form $J_H=\sum_{t=0}^H \frac{1}{2} u_t R u_t$, measurement functions of the form $y=x_{1:n_y}$, and output constraints of the form $y_\mathrm{min} \leq y \leq y_\mathrm{max}$ are supported.
+In order to ensure the reproducibility of the results presented in the paper without reliance on proprietary software, a Julia version using the [Altro](https://github.com/RoboticExplorationLab/Altro.jl) solver is provided. This version was used for the results presented in the paper and reproduces them exactly. However, this version has some limitations: only cost functions of the form $J_H=\sum\nolimits_{t=0}^H \frac{1}{2} u_t R u_t$, measurement functions of the form $y=x_{1:n_y}$, and output constraints of the form $y_\mathrm{min} \leq y \leq y_\mathrm{max}$ are supported.
 
 ## MATLAB
 
