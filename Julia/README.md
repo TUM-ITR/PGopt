@@ -47,7 +47,7 @@ This file contains the particle Gibbs sampler (function `particle_Gibbs()`) and 
 
 Detailed explanations of the individual functions can be found as comments in the file.
 
-### optimal_control_Altro
+### optimal_control_Altro.jl
 This file contains all the functions required to solve the scenario OCP and to derive the theoretical guarantees. The solver Altro is used for the optimization. 
 | Function                          | Purpose                                                                                                                                                                                                                                                                                                                                                        |
 |-----------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
