@@ -105,11 +105,11 @@ Lambda_Q = 100 * I(n_x) # scale matrix
 
 # Prior for A - matrix normal distribution (mean matrix = 0, right covariance matrix = Q (see above), left covariance matrix = V)
 # V is derived from the GP approximation according to eq. (8b), (11a), and (9).
-V_elements = Array{Float64}(undef, size(lambda, 1))
+V_diagonal = Array{Float64}(undef, size(lambda, 1)) # diagonal of V
 for i in 1:size(lambda, 1)
-    V_elements[i] = sf^2 * sqrt(opnorm(2 * pi * Diagonal(repeat(l, trunc(Int, n_z / size(l, 1))) .^ 2))) * exp.(-(pi^2 * transpose(sqrt.(lambda[i, :])) * Diagonal(repeat(l, trunc(Int, n_z / size(l, 1))) .^ 2) * sqrt.(lambda[i, :])) / 2)
+    V_diagonal[i] = sf^2 * sqrt(opnorm(2 * pi * Diagonal(repeat(l, trunc(Int, n_z / size(l, 1))) .^ 2))) * exp.(-(pi^2 * transpose(sqrt.(lambda[i, :])) * Diagonal(repeat(l, trunc(Int, n_z / size(l, 1))) .^ 2) * sqrt.(lambda[i, :])) / 2)
 end
-V = Diagonal(V_elements)
+V = Diagonal(V_diagonal)
 
 # Initial guess for model parameters
 Q_init = Lambda_Q # initial Q

@@ -131,13 +131,13 @@ y_min = reshape([-fill(Inf, 20); 2 * ones(6); -fill(Inf, 15)], (1, H)) # min sys
 # Objective: min ∑_{∀t} 1/2 * u_t * Diagonal(R_cost_diag) * u_t.
 R_cost_diag = [2] # diagonal of R_cost
 
-# Confidence parameter for theoretical guarantees
+# Confidence parameter for the theoretical guarantees
 β = 0.01
 
-# Solve PG OCP.
+# Solve the PG OCP.
 # x_opt, u_opt, y_opt, J_opt, run_status, iter, iterations_outer, penalty_max = solve_PG_OCP(PG_samples, phi, R, H, u_min, u_max, y_min, y_max, R_cost_diag; K_pre_solve=20)
 
-# Solve PG OCP and determine complexity s and max constraint violation probability via greedy algorithm.
+# Solve the PG OCP and determine complexity s and max constraint violation probability via greedy algorithm.
 x_opt, u_opt, y_opt, J_opt, s, epsilon_prob, epsilon_perc, time_first_solve, time_guarantees, num_failed_optimizations = solve_PG_OCP_greedy_guarantees(PG_samples, phi, R, H, u_min, u_max, y_min, y_max, R_cost_diag, β; K_pre_solve=20)
 
 # Apply input trajectory to the actual system.

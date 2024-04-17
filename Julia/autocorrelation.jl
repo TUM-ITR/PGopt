@@ -111,5 +111,5 @@ time_sampling = time() - sampling_timer
 # Test the models with the test data by simulating it forward in time.
 # test_prediction(PG_samples, phi, R, 10, u_test, y_test)
 
-# Plot autocorrelation
+# Plot autocorrelation.
 plot_autocorrelation(PG_samples; max_lag=100)

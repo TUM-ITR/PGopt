@@ -316,9 +316,9 @@ end
 """
     epsilon(s::Int64, K::Int64, β::Float64)
 
-Determine the parameter ϵ. 1-ϵ correponds to a bound on the probability that the incurred cost exceeds the worst-case cost or that the constraints are violated when the input trajectory u_{0:H} is applied to the unknown system.
-ϵ is the unique solution over the inverval (0,1) of the polynomial equation in the v variable:
-binomial(K, s) * (1 - v)^(K - s) - (β / K) * ∑_{m = s}^{K - 1} binomial(m, s) * (1 - v)^(m - s) = 0
+Determine the parameter ϵ. 1-ϵ corresponds to a bound on the probability that the incurred cost exceeds the worst-case cost or that the constraints are violated when the input trajectory u_{0:H} is applied to the unknown system.
+ϵ is the unique solution over the interval (0,1) of the polynomial equation in the v variable:
+binomial(K, s) * (1 - v)^(K - s) - (β / K) * ∑_{m = s}^{K - 1} binomial(m, s) * (1 - v)^(m - s) = 0.
 
 # Arguments
 - `s`: cardinality of the support sub-sample 
@@ -498,7 +498,7 @@ function solve_PG_OCP_greedy_guarantees(PG_samples::Vector{PG_sample}, phi::Func
         u_opt_temp = Array{Float64}(undef, n_u, H - 1)
         active_scenarios = scenarios_sorted
 
-        # Greedily remove constraints and check, whether the solution changes to determine a support sub-sample.
+        # Greedily remove constraints and check whether the solution changes to determine a support sub-sample.
         # In this implementation, the dynamic constraints are always taken into account for all scenarios and only the output constraints are only taken into account for the scenarios in the set temp_scenarios. 
         # Since the dynamic constraints are trivially fulfilled, this does not change the optimization problem. 
         # This implementation ensures that the solutions of the solver are exactly the same if the constraints are fulfilled. 
@@ -515,7 +515,7 @@ function solve_PG_OCP_greedy_guarantees(PG_samples::Vector{PG_sample}, phi::Func
                 # Solve the OCP with reduced constraint set.
                 u_opt_temp, termination_status_temp = solve_PG_OCP(PG_samples, phi, R, H, u_min, u_max, y_min, y_max, R_cost_diag; x_vec_0=x_vec_0, v_vec=v_vec, e_vec=e_vec, u_init=u_init, K_pre_solve=0, active_constraints=temp_scenarios, opts=opts, print_progress=print_progress)[[2, 5]]
 
-                # If the optimization is successful and the solution does not change permanently, remove the constraints corresponding to the PG samples with index i from the constraint set.
+                # If the optimization is successful and the solution does not change, permanently remove the constraints corresponding to the PG samples with index i from the constraint set.
                 if ((termination_status_temp == 2) && (maximum(abs.(u_opt_temp - u_opt)) == 0))
                     active_scenarios = temp_scenarios
                 end
@@ -530,7 +530,7 @@ function solve_PG_OCP_greedy_guarantees(PG_samples::Vector{PG_sample}, phi::Func
         s = length(active_scenarios)
 
         # Based on the cardinality of the support sub-sample, determine the parameter ϵ. 
-        # 1-ϵ correponds to a bound on the probability that the incurred cost exceeds the worst-case cost or that the constraints are violated when the input trajectory u_{0:H} is applied to the unknown system.
+        # 1-ϵ corresponds to a bound on the probability that the incurred cost exceeds the worst-case cost or that the constraints are violated when the input trajectory u_{0:H} is applied to the unknown system.
         epsilon_prob = epsilon(s, K, β)
         epsilon_perc = epsilon_prob * 100
 

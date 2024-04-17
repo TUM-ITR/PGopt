@@ -229,6 +229,7 @@ function particle_Gibbs(u_training, y_training, K, K_b, k_d, N, phi::Function, L
         # Print progress.
         @printf("Iteration %i/%i\n", k, K_total)
     end
+
     # Print runtime.
     time_learning = time() - learning_timer
     @printf("### Learning complete\nRuntime: %.2f s\n", time_learning)
@@ -276,7 +277,7 @@ function test_prediction(PG_samples::Vector{PG_sample}, phi::Function, g, R, k_n
 
         # Simulate each model k_n times.
         for kn in 1:k_n
-            # Pre-allocate
+            # Pre-allocate.
             x_loop = Array{Float64}(undef, n_x, T_test + 1)
             y_loop = Array{Float64}(undef, n_y, T_test)
 
@@ -366,6 +367,7 @@ function plot_predictions(y_pred, y_test; plot_percentiles=false, y_min=nothing,
             plot!(Array(0:T_pred-1), y_max', fillrange=maximum([y_pred_max; y_test']) * ones(T_pred), fillcolor=:red, alpha=0.35, label="constraints")
         end
 
+        # Add title, labels...
         if 1 < n_y
             title!("y_" * string(i) * ": predicted output vs. true output")
             ylabel!("y_" * string(i))
