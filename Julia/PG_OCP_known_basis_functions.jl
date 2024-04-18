@@ -30,6 +30,7 @@ n_y = 1 # number of outputs
 
 # Define basis functions - assumed to be known in this example.
 # Make sure that phi(x,u) is defined in vectorized form, i.e., phi(zeros(n_x,N), zeros(n_u, N)) should return a matrix of dimension (n_phi, N).
+# Scaling the basis functions facilitates the exploration of the posterior distribution and reduces the required thinning parameter k_d.
 n_phi = 5 # number of basis functions
 phi(x, u) = [0.1 * x[1, :] 0.1 * x[2, :] u[1, :] 0.01 * cos.(3 * x[1, :]) .* x[2, :] 0.1 * sin.(2 * x[2, :]) .* u[1, :]]' # basis functions
 

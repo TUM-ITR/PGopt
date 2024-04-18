@@ -10,8 +10,8 @@ close all;
 % Specify seed (for reproducible results).
 rng(5);
 
-% Import CasADi
-addpath('C:\Users\Robert Lefringhausen\Documents\CasADi')
+% Import CasADi - insert your path here.
+addpath('<yourpath>/casadi-3.6.5-windows64-matlab2018b') 
 import casadi.*
 
 %% Learning parameters
@@ -28,6 +28,7 @@ n_y = 1; % number of outputs
 %% State-space prior
 % Define basis functions - assumed to be known in this example.
 % Make sure that phi(x,u) is defined in vectorized form, i.e., phi(zeros(n_x,N), zeros(n_u, N)) should return a matrix of dimension (n_phi, N).
+% Scaling the basis functions facilitates the exploration of the posterior distribution and reduces the required thinning parameter k_d.
 n_phi = 5; % number of basis functions
 phi = @(x, u) [0.1 * x(1, :); 0.1 * x(2, :); u(1, :); 0.01 * cos(3*x(1, :)) .* x(2, :); 0.1 * sin(2*x(2, :)) .* u(1, :)]; % basis functions
 

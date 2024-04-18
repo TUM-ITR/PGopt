@@ -67,4 +67,6 @@ xlabel('Lag');
 ylabel('AFC');
 legend('show');
 grid on;
+yticks(-1:0.1:1);
+xticks(0:10:max_lag);
 end
