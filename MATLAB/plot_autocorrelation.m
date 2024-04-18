@@ -66,4 +66,5 @@ title('Autocorrelation Function (AFC)');
 xlabel('Lag');
 ylabel('AFC');
 legend('show');
+grid on;
 end

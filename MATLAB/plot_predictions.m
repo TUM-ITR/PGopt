@@ -81,6 +81,7 @@ for i = 1:n_y
     xlabel('t');
     legend('Location', 'northwest');
     ylim([min(min(y_pred_min, y_test)), max(max(y_pred_max, y_test))]);
+    grid on;
     hold off;
 end
 end
