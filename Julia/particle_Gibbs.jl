@@ -33,7 +33,7 @@ function systematic_resampling(W, N)
     W = W / sum(W)
 
     u = 1 / N * rand()
-    idx = Array{Int}(undef, N, 1) # array containing the sampled indices
+    idx = Array{Int}(undef, N) # array containing the sampled indices
     q = 0
     n = 0
     for i in 1:N
@@ -132,20 +132,27 @@ function particle_Gibbs(u_training, y_training, K, K_b, k_d, N, phi::Function, L
 
     # Define the prespecified trajectory for the first iteration if not provided.
     if x_prim === nothing
-        x_prim = zeros(n_x, 1, T)
+        x_prim = zeros(n_x, T)
     end
 
-    # Initialize.
+    # Initialize and pre-allocate.
     PG_samples = Vector{PG_sample}(undef, K)
     for k in 1:K
         PG_samples[k] = PG_sample(Array{Float64}(undef, size(A_init)), Array{Float64}(undef, size(Q_init)), Array{Float64}(undef, N), Array{Float64}(undef, n_x, N), Array{Float64}(undef, n_u))
     end
-    w = Array{Float64}(undef, T, N)
-    x_pf = Array{Float64}(undef, n_x, N, T)
-    a = Array{Int64}(undef, T, N)
     current_sample = 1
     A = A_init
     Q = Q_init
+    w = Array{Float64}(undef, T, N)
+    x_pf = Array{Float64}(undef, n_x, N, T)
+    a = Array{Int64}(undef, T, N)
+    waN = Array{Float64}(undef, N)
+    log_w = Array{Float64}(undef, N)
+    zeta = Array{Float64}(undef, n_x, T - 1)
+    z = Array{Float64}(undef, n_phi, T - 1)
+    Phi = Array{Float64}(undef, n_x, n_x)
+    Psi = Array{Float64}(undef, n_x, n_phi)
+    Sigma = Array{Float64}(undef, n_phi, n_phi)
 
     # Time PGS sampling.
     learning_timer = time()
@@ -158,11 +165,11 @@ function particle_Gibbs(u_training, y_training, K, K_b, k_d, N, phi::Function, L
         mvn_v = MvNormal(zeros(n_x), Q) # process noise distribution
 
         # Initialize particle filter with ancestor sampling.
-        x_pf[:, end, :] = x_prim
+        x_pf[:, end, :] .= x_prim
 
         # Sample initial states.
         for n in 1:N-1
-            x_pf[:, n, 1] = rand(x_init_dist)
+            x_pf[:, n, 1] .= rand(x_init_dist)
         end
 
         # Particle filter (resampling, propagation, and ancestor sampling)
@@ -170,60 +177,60 @@ function particle_Gibbs(u_training, y_training, K, K_b, k_d, N, phi::Function, L
             if t >= 2
                 if k > 1 # Run the conditional PF with ancestor sampling.
                     # Resample particles (= sample ancestors).
-                    a[t, 1:N-1] = systematic_resampling(w[t-1, :], N - 1)
+                    a[t, 1:N-1] .= systematic_resampling(w[t-1, :], N - 1)
 
                     # Propagate resampled particles.
-                    x_pf[:, 1:N-1, t] = f(x_pf[:, a[t, 1:N-1], t-1], repeat(u_training[:, t-1], 1, N - 1)) + rand(mvn_v, N - 1)
+                    x_pf[:, 1:N-1, t] .= f(x_pf[:, a[t, 1:N-1], t-1], repeat(u_training[:, t-1], 1, N - 1)) + rand(mvn_v, N - 1)
 
-                    # Sample ancestors of prespecified trajectory x_prim.
-                    mvn_x_prim = MvNormal(x_pf[:, N, t], Q)
-                    waN = w[t-1, :] .* pdf(mvn_x_prim, f(x_pf[:, :, t-1], repeat(u_training[:, t-1], 1, N)))
-                    waN = waN ./ sum(waN)
-                    a[t, N] = systematic_resampling(waN, 1)[1]
+                     # Sample ancestors of prespecified trajectory x_prim.
+                     mvn_x_prim = MvNormal(x_pf[:, N, t], Q)
+                     waN .= w[t-1, :] .* pdf(mvn_x_prim, f(x_pf[:, :, t-1], repeat(u_training[:, t-1], 1, N)))
+                     waN .= waN ./ sum(waN)
+                     a[t, N] = systematic_resampling(waN, 1)[1]
 
                 else # Run a standard PF on the first iteration.
                     # Resample particles.
-                    a[t, :] = systematic_resampling(w[t-1, :], N)
+                    a[t, :] .= systematic_resampling(w[t-1, :], N)
 
                     # Propagate resampled particles.
-                    x_pf[:, :, t] = f(x_pf[:, a[t, :], t-1], repeat(u_training[:, t-1], 1, N)) + rand(mvn_v, N)
+                    x_pf[:, :, t] .= f(x_pf[:, a[t, :], t-1], repeat(u_training[:, t-1], 1, N)) + rand(mvn_v, N)
                 end
             end
 
             # PF weight update based on measurement model (logarithms are used for numerical reasons).
             if n_y == 1 # scalar output
-                log_w = -(g(x_pf[:, :, t], repeat(u_training[:, t], 1, N)) .- y_training[1, t]) .^ 2 / 2 / R # logarithm of normal distribution pdf (ignoring scaling factors)
+                log_w .= -(g(x_pf[:, :, t], repeat(u_training[:, t], 1, N))[1,:] .- y_training[1, t]) .^ 2 / 2 / R # logarithm of normal distribution pdf (ignoring scaling factors)
             else # vector-valued output
-                log_w = -sum((y_training[:, t] .- g(x_pf[:, :, t], repeat(u_training[:, t], 1, N))) .* (R \ (y_training[:, t] .- g(x_pf[:, :, t], repeat(u_training[:, t], 1, N)))), dims=1) / 2 # logarithm of multivariate normal distribution pdf (ignoring scaling factors)
+                log_w .= -sum((y_training[:, t] .- g(x_pf[:, :, t], repeat(u_training[:, t], 1, N))) .* (R \ (y_training[:, t] .- g(x_pf[:, :, t], repeat(u_training[:, t], 1, N)))), dims=1) / 2 # logarithm of multivariate normal distribution pdf (ignoring scaling factors)
             end
-            w[t, :] = exp.(log_w .- maximum(log_w))
-            w[t, :] = w[t, :] ./ sum(w[t, :])
+            w[t, :] .= exp.(log_w .- maximum(log_w))
+            w[t, :] .= w[t, :] ./ sum(w[t, :])
         end
 
         # Use sample if the burn-in period is reached and the sample is not removed by thinning.
         if K_b < k && (mod(k - (K_b + 1), k_d + 1) == 0)
-            PG_samples[current_sample].A = A
-            PG_samples[current_sample].Q = Q
-            PG_samples[current_sample].w_m1 = w[end, :]
-            PG_samples[current_sample].x_m1 = x_pf[:, :, end]
-            PG_samples[current_sample].u_m1 = u_training[:, end]
+            PG_samples[current_sample].A .= A
+            PG_samples[current_sample].Q .= Q
+            PG_samples[current_sample].w_m1 .= w[end, :]
+            PG_samples[current_sample].x_m1 .= x_pf[:, :, end]
+            PG_samples[current_sample].u_m1 .= u_training[:, end]
             current_sample += 1
         end
 
         # Sample state trajectory x_T:-1 to condition on.
-        star = systematic_resampling(w[end, :], 1)
-        x_prim[:, 1, T] = x_pf[:, star, T]
+        star = systematic_resampling(w[end, :], 1)[1]
+        x_prim[:, T] .= x_pf[:, star, T]
         for t in T-1:-1:1
             star = a[t+1, star]
-            x_prim[:, 1, t] = x_pf[:, star, t]
+            x_prim[:, t] .= x_pf[:, star, t]
         end
 
         # Sample new model parameters conditional on sampled trajectory, i.e., sample from p(A, Q | x_T:-1).
-        zeta = x_prim[:, 1, 2:T]
-        z = phi(x_prim[:, 1, 1:T-1], u_training[:, 1:T-1])
-        Phi = zeta * zeta' # statistic; see paper "A flexible state-space model for learning nonlinear dynamical systems"
-        Psi = zeta * z' # statistic
-        Sigma = z * z' # statistic
+        zeta .= x_prim[:, 2:T]
+        z .= phi(x_prim[:, 1:T-1], u_training[:, 1:T-1])
+        Phi .= zeta * zeta' # statistic; see paper "A flexible state-space model for learning nonlinear dynamical systems"
+        Psi .= zeta * z' # statistic
+        Sigma .= z * z' # statistic
         A, Q = MNIW_sample(Phi, Psi, Sigma, V, Lambda_Q, ell_Q, T - 1) # sample new model parameters
 
         # Print progress.
@@ -282,21 +289,21 @@ function test_prediction(PG_samples::Vector{PG_sample}, phi::Function, g, R, k_n
             y_loop = Array{Float64}(undef, n_y, T_test)
 
             # Sample initial state.
-            star = systematic_resampling(PG_samples[k].w_m1, 1)
+            star = systematic_resampling(PG_samples[k].w_m1, 1)[1]
             x_m1 = PG_samples[k].x_m1[:, star]
-            x_loop[:, 1] = f(x_m1, PG_samples[k].u_m1) + rand(mvn_v)
+            x_loop[:, 1] .= f(x_m1, PG_samples[k].u_m1) + rand(mvn_v)
 
             # Simulate model forward.
             for t in 1:T_test
                 if t >= 2
-                    x_loop[:, t] = f(x_loop[:, t-1], u_test[:, t-1]) + rand(mvn_v)
+                    x_loop[:, t] .= f(x_loop[:, t-1], u_test[:, t-1]) + rand(mvn_v)
                 end
-                y_loop[:, t] = g(x_loop[:, t], u_test[:, t]) + rand(mvn_e)
+                y_loop[:, t] .= g(x_loop[:, t], u_test[:, t]) + rand(mvn_e)
             end
 
             # Store trajectory.
-            x_test_sim[:, :, k, kn] = x_loop
-            y_test_sim[:, :, k, kn] = y_loop
+            x_test_sim[:, :, k, kn] .= x_loop
+            y_test_sim[:, :, k, kn] .= y_loop
         end
     end
 
@@ -406,7 +413,7 @@ function plot_autocorrelation(PG_samples::Vector{PG_sample}; max_lag=0)
         # Sample initial state.
         star = systematic_resampling(PG_samples[i].w_m1, 1)
         x_m1 = PG_samples[i].x_m1[:, star]
-        signal_matrix[i, :] = [vec(PG_samples[i].A); vec(PG_samples[i].Q); vec(x_m1)]
+        signal_matrix[i, :] .= [vec(PG_samples[i].A); vec(PG_samples[i].Q); vec(x_m1)]
     end
 
     # Calculate the autocorrelation.
