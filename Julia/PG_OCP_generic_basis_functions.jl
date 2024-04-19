@@ -183,7 +183,7 @@ PG_samples = particle_Gibbs(u_training, y_training, K, K_b, k_d, N, phi_sampling
 time_sampling = time() - sampling_timer
 
 # Test the models with the test data by simulating it forward in time.
-# test_prediction(PG_samples, phi, g, R, 10, u_test, y_test)
+# test_prediction(PG_samples, phi_sampling, g, R, 10, u_test, y_test)
 
 # Plot autocorrelation.
 # plot_autocorrelation(PG_samples; max_lag=K-1)
