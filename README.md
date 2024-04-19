@@ -1,5 +1,5 @@
 <p align="center">
-<img width="339" height="193" src="PGopt_logo.png">
+<img width="452" height="257" src="PGopt_logo.png">
 </p>
 
 # `PGopt`: Particle Gibbs-based optimal control with performance guarantees
