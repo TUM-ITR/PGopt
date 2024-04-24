@@ -48,7 +48,7 @@ This script reproduces the results of the optimal control approach with generic 
 
 The method presented in the paper ["A flexible state–space model for learning nonlinear dynamical systems"](https://doi.org/10.1016/j.automatica.2017.02.030) is utilized to systematically derive basis functions and priors for the parameters based on a reduced-rank GP approximation. Afterward, by calling the function `particle_Gibbs()`, samples are drawn from the posterior distribution using particle Gibbs sampling. These samples are then passed to the function `solve_PG_OCP()`, which solves the scenario OCP.
 
-The runtime of the script is about 3 hours on a standard laptop.
+The runtime of the script is about 2 hours on a standard laptop. Using an improved phi function can reduce the runtime to about 50 minutes, but the results change slightly due to numerical reasons. Further explanations can be found in the source code.
 
 For the results in Table IV of the paper, this script is repeated with seeds 1:100.
 

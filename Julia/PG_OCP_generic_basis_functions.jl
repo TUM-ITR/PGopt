@@ -83,21 +83,48 @@ j_vec = reverse(j_vec, dims=3)
 
 # Define basis functions phi.
 # This function evaluates Φ_{1 : n_x+n_u} according to eq. (5).
-# Multithreading is used to speed up the sampling.
+# There are two implementations of the phi function: 
+#
+# The first exactly reproduces the results given in the paper.
+#
+# After the paper's publication, a much more efficient implementation was found, which, for numerical reasons, produces slightly different results (differences in the range 10^-16 when called once). 
+# However, these minimal deviations lead to noticeably different results since the function phi is called recursively T * N * K_total times (= very often). 
+# This version is currently commented-out to ensure the reproducibility of the results provided in the paper.
+# However, if you do not intend to reproduce the results of the paper, the currently commented-out version of the phi function should be used.
+
+# This is the original implementation, which is slow but exactly reproduces the results given in the paper.
 function phi_sampling(x, u)
-    # Initialize
+    # Initialize.
     z = vcat(u, x) # augmented state
     phi = Array{Float64}(undef, n_phi, size(z, 2))
 
     Threads.@threads for i in 1:size(z, 2)
         phi_temp = ones(n_phi)
         for k in 1:size(z, 1)
-            phi_temp = phi_temp .* ((1 ./ (sqrt.(L[:, :, k]))) .* sin.((pi .* j_vec[:, :, k] .* (z[k, i] .+ L[:, :, k])) ./ (2 .* L[:, :, k])))
+            phi_temp .= phi_temp .* ((1 ./ (sqrt.(L[:, :, k]))) .* sin.((pi .* j_vec[:, :, k] .* (z[k, i] .+ L[:, :, k])) ./ (2 .* L[:, :, k])))
         end
-        phi[:, i] = phi_temp
+        phi[:, i] .= phi_temp
     end
     return phi
 end
+
+# This is the improved implementation, which is significantly faster but yields slightly different results.
+#=
+# Precompute.
+L_sqrt_inv = 1 ./ sqrt.(L)
+pi_j_over_2L = pi .* j_vec ./ (2 .* L)
+function phi_sampling(x, u)
+    # Initialize.
+    z = vcat(u, x) # augmented state
+    phi = ones(n_phi, size(z, 2))
+
+    for k in 1:size(z, 1)
+        phi .= phi .* (L_sqrt_inv[:, :, k] .* sin.(pi_j_over_2L[:, :, k] * (z[k, :] .+ L[:, :, k])'))
+    end
+
+    return phi
+end
+=#
 
 # Prior for Q - inverse Wishart distribution
 ell_Q = 10 # degrees of freedom
@@ -183,7 +210,7 @@ PG_samples = particle_Gibbs(u_training, y_training, K, K_b, k_d, N, phi_sampling
 time_sampling = time() - sampling_timer
 
 # Test the models with the test data by simulating it forward in time.
-# test_prediction(PG_samples, phi_sampling, g, R, 10, u_test, y_test)
+# test_prediction(PG_samples, phi, g, R, 10, u_test, y_test)
 
 # Plot autocorrelation.
 # plot_autocorrelation(PG_samples; max_lag=K-1)
@@ -202,7 +229,7 @@ y_min = reshape([-fill(Inf, 20); 2 * ones(6); -fill(Inf, 15)], (1, H)) # min sys
 # Objective: min ∑_{∀t} 1/2 * u_t * Diagonal(R_cost_diag) * u_t.
 R_cost_diag = [2] # diagonal of R_cost
 
-# Redefine phi - the optimization cannot deal with multithreading.
+# Redefine phi - the optimization cannot deal with multithreading or in-place computations.
 # This function evaluates Φ_{1 : n_x+n_u} according to eq. (5).
 function phi_opt(x, u)
     # Initialize.
