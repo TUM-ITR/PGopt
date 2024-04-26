@@ -3,13 +3,14 @@
 # This script reproduces Figure 2. For the results given in Table II, this script is repeated with seeds 1:100. 
 # Please note that the results depend heavily on random numbers and that changing the order of the generated random numbers (e.g., by executing commented-out code parts) changes the results.
 
+include("PGopt.jl")
+using .PGopt
 using LinearAlgebra
 using Random
 using Distributions
 using Printf
 using Plots
-include("particle_Gibbs.jl")
-include("optimal_control_Altro.jl")
+using Altro
 
 # Specify seed (for reproducible results).
 Random.seed!(82)

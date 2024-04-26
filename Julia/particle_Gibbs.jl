@@ -1,20 +1,3 @@
-using Distributions
-using LinearAlgebra
-using StaticArrays
-using Plots
-using Printf
-using Random
-using StatsBase
-
-# Struct for the samples of the PGS algorithm
-mutable struct PG_sample
-    A::Matrix{Float64} # weight matrix
-    Q::Matrix{Float64} # process noise covariance
-    w_m1::Array{Float64} # weights in the last timestep of the training dataset (t=-1)
-    x_m1::Array{Float64} # corresponding states in the last timestep of the training dataset (t=-1)
-    u_m1::Array{Float64} # input in the last timestep of the training dataset (t=-1) - required to make predictions
-end
-
 """
     systematic_resampling(W, N)
 
@@ -93,7 +76,7 @@ function MNIW_sample(Phi, Psi, Sigma, V, Lambda_Q, ell_Q, T)
 end
 
 """
-    particle_Gibbs(u_training, y_training, K, K_b, k_d, N, phi::Function, Lambda_Q, ell_Q, Q_init, V, A_init, x_init_dist, g, R)
+    particle_Gibbs(u_training, y_training, K, K_b, k_d, N, phi::Function, Lambda_Q, ell_Q, Q_init, V, A_init, x_init_dist, g, R; x_prim=nothing)
 
 Run particle Gibbs sampler with ancestor sampling to obtain samples (A, Q, x_T:-1) from the joint parameter and state posterior distribution p(A, Q, x_T:-1 | D=(u_training, y_training)).
 
@@ -120,7 +103,7 @@ This function is based on the papers
     F. Lindsten, T. B. Schön, and M. Jordan, “Ancestor sampling for particle Gibbs,” Advances in Neural Information Processing Systems, vol. 25, 2012.
 and the code provided in the supplementary material.
 """
-function particle_Gibbs(u_training, y_training, K, K_b, k_d, N, phi::Function, Lambda_Q, ell_Q, Q_init, V, A_init, x_init_dist, g, R; x_prim = nothing)
+function particle_Gibbs(u_training, y_training, K, K_b, k_d, N, phi::Function, Lambda_Q, ell_Q, Q_init, V, A_init, x_init_dist, g, R; x_prim=nothing)
     # Total number of models
     K_total = K_b + 1 + (K - 1) * (k_d + 1)
 
@@ -128,6 +111,7 @@ function particle_Gibbs(u_training, y_training, K, K_b, k_d, N, phi::Function, L
     n_x = size(A_init, 1)
     n_u = size(u_training, 1)
     n_y = size(y_training, 1)
+    n_phi = size(A_init,2)
     T = size(y_training, 2)
 
     # Define the prespecified trajectory for the first iteration if not provided.
@@ -182,11 +166,11 @@ function particle_Gibbs(u_training, y_training, K, K_b, k_d, N, phi::Function, L
                     # Propagate resampled particles.
                     x_pf[:, 1:N-1, t] .= f(x_pf[:, a[t, 1:N-1], t-1], repeat(u_training[:, t-1], 1, N - 1)) + rand(mvn_v, N - 1)
 
-                     # Sample ancestors of prespecified trajectory x_prim.
-                     mvn_x_prim = MvNormal(x_pf[:, N, t], Q)
-                     waN .= w[t-1, :] .* pdf(mvn_x_prim, f(x_pf[:, :, t-1], repeat(u_training[:, t-1], 1, N)))
-                     waN .= waN ./ sum(waN)
-                     a[t, N] = systematic_resampling(waN, 1)[1]
+                    # Sample ancestors of prespecified trajectory x_prim.
+                    mvn_x_prim = MvNormal(x_pf[:, N, t], Q)
+                    waN .= w[t-1, :] .* pdf(mvn_x_prim, f(x_pf[:, :, t-1], repeat(u_training[:, t-1], 1, N)))
+                    waN .= waN ./ sum(waN)
+                    a[t, N] = systematic_resampling(waN, 1)[1]
 
                 else # Run a standard PF on the first iteration.
                     # Resample particles.
@@ -199,7 +183,7 @@ function particle_Gibbs(u_training, y_training, K, K_b, k_d, N, phi::Function, L
 
             # PF weight update based on measurement model (logarithms are used for numerical reasons).
             if n_y == 1 # scalar output
-                log_w .= -(g(x_pf[:, :, t], repeat(u_training[:, t], 1, N))[1,:] .- y_training[1, t]) .^ 2 / 2 / R # logarithm of normal distribution pdf (ignoring scaling factors)
+                log_w .= -(g(x_pf[:, :, t], repeat(u_training[:, t], 1, N))[1, :] .- y_training[1, t]) .^ 2 / 2 / R # logarithm of normal distribution pdf (ignoring scaling factors)
             else # vector-valued output
                 log_w .= -sum((y_training[:, t] .- g(x_pf[:, :, t], repeat(u_training[:, t], 1, N))) .* (R \ (y_training[:, t] .- g(x_pf[:, :, t], repeat(u_training[:, t], 1, N)))), dims=1) / 2 # logarithm of multivariate normal distribution pdf (ignoring scaling factors)
             end
@@ -427,12 +411,12 @@ function plot_autocorrelation(PG_samples::Vector{PG_sample}; max_lag=0)
             plot!(Array(0:max_lag), autocorrelation[:, i], lc=:red, lw=2, label="A")
         elseif 1 < i <= length(PG_samples[1].A)
             plot!(Array(0:max_lag), autocorrelation[:, i], lc=:red, lw=2, label="")
-        # Plot the ACF of the elements of Q.  
+            # Plot the ACF of the elements of Q.  
         elseif i == length(PG_samples[1].A) + 1
             plot!(Array(0:max_lag), autocorrelation[:, i], lc=:blue, lw=2, label="Q")
         elseif (length(PG_samples[1].A) + 1 < i) && (i <= length(PG_samples[1].A) + length(PG_samples[1].Q))
             plot!(Array(0:max_lag), autocorrelation[:, i], lc=:blue, lw=2, label="")
-        # Plot the ACF of the elements of x_t-1.
+            # Plot the ACF of the elements of x_t-1.
         elseif i == length(PG_samples[1].A) + length(PG_samples[1].Q) + 1
             plot!(Array(0:max_lag), autocorrelation[:, i], lc=:green, lw=2, label="x")
         elseif length(PG_samples[1].A) + length(PG_samples[1].Q) + 1 < i

@@ -3,13 +3,14 @@
 # This script reproduces Figure 3. For the results given in Table IV, this script is repeated with seeds 1:100.
 # Please note that the results depend heavily on random numbers and that changing the order of the generated random numbers (e.g., by executing commented-out code parts) changes the results.
 
+include("PGopt.jl")
+using .PGopt
 using LinearAlgebra
 using Random
 using Distributions
 using Printf
 using Plots
-include("particle_Gibbs.jl")
-include("optimal_control_Altro.jl")
+using Altro
 
 # Specify seed (for reproducible results).
 Random.seed!(82)
@@ -98,9 +99,9 @@ function phi_sampling(x, u)
     z = vcat(u, x) # augmented state
     phi = Array{Float64}(undef, n_phi, size(z, 2))
 
-    Threads.@threads for i in 1:size(z, 2)
+    Threads.@threads for i in axes(z, 2)
         phi_temp = ones(n_phi)
-        for k in 1:size(z, 1)
+        for k in axes(z, 1)
             phi_temp .= phi_temp .* ((1 ./ (sqrt.(L[:, :, k]))) .* sin.((pi .* j_vec[:, :, k] .* (z[k, i] .+ L[:, :, k])) ./ (2 .* L[:, :, k])))
         end
         phi[:, i] .= phi_temp
@@ -118,7 +119,7 @@ function phi_sampling(x, u)
     z = vcat(u, x) # augmented state
     phi = ones(n_phi, size(z, 2))
 
-    for k in 1:size(z, 1)
+    for k in axes(z, 1)
         phi .= phi .* (L_sqrt_inv[:, :, k] .* sin.(pi_j_over_2L[:, :, k] * (z[k, :] .+ L[:, :, k])'))
     end
 
@@ -133,7 +134,7 @@ Lambda_Q = 100 * I(n_x) # scale matrix
 # Prior for A - matrix normal distribution (mean matrix = 0, right covariance matrix = Q (see above), left covariance matrix = V)
 # V is derived from the GP approximation according to eq. (8b), (11a), and (9).
 V_diagonal = Array{Float64}(undef, size(lambda, 1)) # diagonal of V
-for i in 1:size(lambda, 1)
+for i in axes(lambda, 1)
     V_diagonal[i] = sf^2 * sqrt(opnorm(2 * pi * Diagonal(repeat(l, trunc(Int, n_z / size(l, 1))) .^ 2))) * exp.(-(pi^2 * transpose(sqrt.(lambda[i, :])) * Diagonal(repeat(l, trunc(Int, n_z / size(l, 1))) .^ 2) * sqrt.(lambda[i, :])) / 2)
 end
 V = Diagonal(V_diagonal)
@@ -236,9 +237,9 @@ function phi_opt(x, u)
     z = vcat(u, x) # augmented state
     phi = Array{Any}(undef, n_phi, size(z, 2))
 
-    for i in 1:size(z, 2)
+    for i in axes(z, 2)
         phi_temp = ones(n_phi)
-        for k in 1:size(z, 1)
+        for k in axes(z, 1)
             phi_temp = phi_temp .* ((1 ./ (sqrt.(L[:, :, k]))) .* sin.((pi .* j_vec[:, :, k] .* (z[k, i] .+ L[:, :, k])) ./ (2 .* L[:, :, k])))
         end
         phi[:, i] = phi_temp

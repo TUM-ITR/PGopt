@@ -1,11 +1,3 @@
-include("particle_Gibbs.jl")
-using Altro
-using TrajectoryOptimization
-using RobotDynamics
-using ForwardDiff
-using FiniteDiff
-using SpecialFunctions
-
 # Define RobotDynamics object - see RobotDynamics.jl for explanations.
 # The PG samples are combined into a single model with state x_vec containing the K*n_x states of the individual models.
 RobotDynamics.@autodiff struct PGS_model_obj <: RobotDynamics.DiscreteDynamics
@@ -536,7 +528,7 @@ function solve_PG_OCP_greedy_guarantees(PG_samples::Vector{PG_sample}, phi::Func
 
         # Print s, ϵ, and runtime.
         time_guarantees = time() - guarantees_timer
-        @printf("### Support sub sample found\nCardinality of the support sub-sample (s): %i\nMax. constraint violation probability (1-epsilon): %.2f %%\nTime to compute u*: %.2f s\nTime to compute 1-epsilon: %.2f s\n", s, 100-epsilon_perc, time_first_solve, time_guarantees)
+        @printf("### Support sub sample found\nCardinality of the support sub-sample (s): %i\nMax. constraint violation probability (1-epsilon): %.2f %%\nTime to compute u*: %.2f s\nTime to compute 1-epsilon: %.2f s\n", s, 100 - epsilon_perc, time_first_solve, time_guarantees)
     else
         # In case the initial problem is infeasible, skip the computation of guarantees.
         @warn "No feasible solution found for the initial problem. Skipping computation of guarantees."

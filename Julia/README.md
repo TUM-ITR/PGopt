@@ -52,6 +52,9 @@ The runtime of the script is about 2 hours on a standard laptop. Using an improv
 
 For the results in Table IV of the paper, this script is repeated with seeds 1:100.
 
+### PGopt.jl
+Defines the module `PGopt`, which contains the functions defined in `particle_Gibbs.jl` and `optimal_control_Altro.jl`.
+
 ### particle_Gibbs.jl
 This file contains the particle Gibbs sampler (function `particle_Gibbs()`) and several auxiliary functions that can, for example, be used to test the predictions. 
 | Function                | Purpose                                                                                                                                          |
