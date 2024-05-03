@@ -3,9 +3,15 @@ This folder contains the Julia implementation of `PGopt`, which does not require
 
 **Please note that this version has several limitations: only cost functions of the form $J_H=\sum\nolimits_{t=0}^H \frac{1}{2} u_t R u_t$, measurement functions of the form $y=x_{1:n_y}$, and output constraints of the form $y_\mathrm{min} \leq y \leq y_\mathrm{max}$ are supported.**
 
-To execute the code, install [Julia](https://julialang.org/) and download all the necessary packages via the package manager. Then execute the scripts `autocorrelation.jl`, `PG_OCP_known_basis_functions.jl`, or `PG_generic_basis_functions.jl`.
+To execute the code, install [Julia](https://julialang.org/). Navigate to this folder, start a Pkg REPL (press `]` in a Julia REPL), and install the dependencies via
+```
+pkg>activate . 
+pkg>instantiate
+```
 
-Tested with Windows 11 and Julia 1.9.
+Then execute the scripts `autocorrelation.jl`, `PG_OCP_known_basis_functions.jl`, or `PG_generic_basis_functions.jl` in the folder `examples`.
+
+Tested with Windows 11 and Julia 1.10.
 
 ## List of files
 

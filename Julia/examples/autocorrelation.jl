@@ -1,12 +1,13 @@
 # This code reproduces the normalized auto-correlation function plot given in Section V-B (Fig. 1) of the paper 
 # "Learning-Based Optimal Control with Performance Guarantees for Unknown Systems with Latent States", available as pre-print on arXiv: https://arxiv.org/abs/2303.17963.
 
+include("../src/PGopt.jl")
+using .PGopt
 using LinearAlgebra
 using Random
 using Distributions
 using Printf
 using Plots
-include("particle_Gibbs.jl")
 
 # Specify seed (for reproducible results).
 Random.seed!(82)

@@ -23,7 +23,7 @@ Tested with Windows 11 and MATLAB R2021b.
 This script produces a normalized auto-correlation function plot similar to the one given in Section V-B (Fig. 1) of the paper.
 
 <p align = "left">
-  <img src="Figures/autocorrelation.svg" alt="autocorrelation" style="width:80%;"/>
+  <img src="figures/autocorrelation.svg" alt="autocorrelation" style="width:80%;"/>
 </p>
 
 Assuming knowledge of the basis functions, samples are drawn from the posterior distribution over model parameters and latent state trajectories using the function `particle_Gibbs()` without thinning. Afterward, the autocorrelation is plotted using the function `plot_autocorrelation()`.
@@ -34,7 +34,7 @@ The runtime of the script is about 15 minutes on a standard laptop.
 This script produces results for the optimal control approach with known basis functions similar to the ones given in Section V-B (Fig. 2) of the paper.
 
 <p align = "left">
-  <img src="Figures/PG_OCP_known_basis_functions.svg" alt="PG_OCP_known_basis_functions" style="width:80%;"/>
+  <img src="figures/PG_OCP_known_basis_functions.svg" alt="PG_OCP_known_basis_functions" style="width:80%;"/>
 </p>
 
 ```
@@ -51,7 +51,7 @@ The runtime of the script is about 2 hours on a standard laptop.
 This script produces results for the optimal control approach with generic basis functions similar to the ones given in Section V-B (Fig. 3) of the paper.
 
 <p align = "left">
-  <img src="Figures/PG_OCP_generic_basis_functions.svg" alt="PG_OCP_generic_basis_functions" style="width:80%;"/>
+  <img src="figures/PG_OCP_generic_basis_functions.svg" alt="PG_OCP_generic_basis_functions" style="width:80%;"/>
 </p>
 
 The method presented in the paper ["A flexible state–space model for learning nonlinear dynamical systems"](https://doi.org/10.1016/j.automatica.2017.02.030) is utilized to systematically derive basis functions and priors for the parameters based on a reduced-rank GP approximation. Afterward, by calling the function `particle_Gibbs()`, samples are drawn from the posterior distribution using particle Gibbs sampling. These samples are then passed to the function `solve_PG_OCP()`, which solves the scenario OCP.

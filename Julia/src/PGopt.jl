@@ -1,3 +1,4 @@
+"Core module of the PGopt algorithm. Contains all necessary functions such as the particle Gibbs sampler and scenario optimization."
 module PGopt
 using Distributions
 using LinearAlgebra
