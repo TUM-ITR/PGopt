@@ -154,7 +154,6 @@ Y_init = zeros(n_y*K, H); % initial guess for Y
 for k = 1:K
     % Get model.
     A = PG_samples{k}.A;
-    Q = PG_samples{k}.Q;
     f = @(x, u) A * phi(x, u);
     for t = 1:H
         X_init(n_x*(k - 1)+1:n_x*k, t+1) = f(X_init(n_x*(k - 1)+1:n_x*k, t), u_init(:, t)) + v_vec(:, t, k);
@@ -186,7 +185,6 @@ end
 for k = 1:K
     % Get model.
     A = PG_samples{k}.A;
-    Q = PG_samples{k}.Q;
     f = @(x, u) A * phi(x, u);
 
     for t = 1:H

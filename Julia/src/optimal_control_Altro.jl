@@ -66,14 +66,14 @@ Solve the optimal control problem of the following form:
 min ∑_{∀t} 1/2 * u_t * Diagonal(R_cost_diag) * u_t
 
 subject to: ∀k, ∀t
-    x_{t+1}^k = f(x_t^k, u_t^k) + v_t^k - implemented in RobotDynamics.discrete_dynamics
+    x_{t+1}^k = f_{θ^k}(x_t^k, u_t) + v_t^k - implemented in RobotDynamics.discrete_dynamics
     x_t^k[1:n_y] >= y_{min,t} - e_t^k
     x_t^k[1:n_y] <= y_{max,t} - e_t^k
     u_t >= u_{min,t}
     u_t <= u_{max,t}.
 
 Note that the output constraints imply the measurement function y_t^k = x_t^k[1:n_y].
-Further note that the states of the individual models x^k are combined in the vector x_vec of dimension K*n_x.
+Further note that the states of the individual models x^k are combined in the vector x_vec of dimension K * n_x.
 
 # Arguments
 - `PG_samples`: PG samples
@@ -359,14 +359,14 @@ Based on the cardinality s, a bound on the probability that the incurred cost ex
 min ∑_{∀t} 1/2 * u_t * Diagonal(R_cost_diag) * u_t
 
 subject to: ∀k, ∀t
-    x_{t+1}^k = f(x_t^k, u_t^k) + v_t^k - implemented in RobotDynamics.discrete_dynamics
+    x_{t+1}^k = f_{θ^k}(x_t^k, u_t) + v_t^k - implemented in RobotDynamics.discrete_dynamics
     x_t^k[1:n_y] >= y_{min,t} - e_t^k
     x_t^k[1:n_y] <= y_{max,t} - e_t^k
     u_t >= u_{min,t}
     u_t <= u_{max,t}.
 
 Note that the output constraints imply the measurement function y_t^k = x_t^k[1:n_y].
-Further note that the states of the individual models x^k are combined in the vector x_vec of dimension K*n_x.
+Further note that the states of the individual models x^k are combined in the vector x_vec of dimension K * n_x.
 
 # Arguments
 - `PG_samples`: PG samples
