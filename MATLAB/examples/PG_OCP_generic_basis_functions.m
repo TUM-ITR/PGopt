@@ -10,6 +10,9 @@ close all;
 % Specify seed (for reproducible results).
 rng(5);
 
+% Import src
+addpath('..\src')
+
 % Import CasADi - insert your path here.
 addpath('<yourpath>/casadi-3.6.5-windows64-matlab2018b')
 import casadi.*

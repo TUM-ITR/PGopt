@@ -10,9 +10,8 @@ close all;
 % Specify seed (for reproducible results).
 rng(5);
 
-% Import CasADi
-addpath('C:\Users\Robert Lefringhausen\Documents\CasADi')
-import casadi.*
+% Import src
+addpath('..\src')
 
 %% Learning parameters
 K = 10000; % number of PG samples
