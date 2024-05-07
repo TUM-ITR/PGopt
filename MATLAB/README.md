@@ -11,7 +11,7 @@ Finally, download [CasADi](https://web.casadi.org/get/) and unzip the source cod
 ```
 addpath('<yourpath>/casadi-3.6.5-windows64-matlab2018b')
 ```
-at the beginning of the MATLAB scripts `PG_OCP_known_basis_functions.m`and `PG_generic_basis_functions.m` in the folder `examples`.
+at the beginning of the MATLAB scripts `PG_OCP_known_basis_functions.m` and `PG_generic_basis_functions.m` in the folder `examples`.
 
 Then, execute the scripts `autocorrelation.m`, `PG_OCP_known_basis_functions.m`, or `PG_generic_basis_functions.m` in the folder `examples`.
 

@@ -19,11 +19,11 @@ RobotDynamics.default_signature(::PGS_model_obj) = RobotDynamics.InPlace() # use
 """
     RobotDynamics.discrete_dynamics(PGS_model::PGS_model, x_vec, u, t, dt)
 
-Compute the state of all scenarios in the next time step t+1. The PG samples are combined into a single model with K*n_x states.
+Compute the state of all scenarios in the next time step (``x_{t+1}``). The PG samples are combined into a single model with K * n_x states.
 
 # Arguments
 - `PGS_model`: RobotDynamics object
-- `x_vec`: vector with K*n_x elements containing the state of all models in the current timestep (t)
+- `x_vec`: vector with K * n_x elements containing the state of all models in the current timestep (t)
 - `u`: current control input
 - `t`: time index
 - `dt`: step size - unused
@@ -42,7 +42,7 @@ end
 """
     RobotDynamics.discrete_dynamics!(PGS_model::PGS_model, x_vec_n, x_vec, u, t, dt)
 
-Compute the state of all scenarios in the next time step (t+1) in-place. The PG samples are combined into a single model with K*n_x states.
+Compute the state of all scenarios in the next time step (``x_{t+1}``) in-place. The PG samples are combined into a single model with K * n_x states.
 
 # Arguments
 - `x_vec`: vector with K*n_x elements containing the state of all models in the next timestep (t+1)
@@ -63,33 +63,38 @@ end
 
 Solve the optimal control problem of the following form:
 
-min ∑_{∀t} 1/2 * u_t * Diagonal(R_cost_diag) * u_t
+``\\min \\sum_{t=0}^{H} \\frac{1}{2}  u_t  \\operatorname{diag}(R_{\\mathrm{cost}}) u_t``
 
-subject to: ∀k, ∀t
-    x_{t+1}^k = f_{θ^k}(x_t^k, u_t) + v_t^k - implemented in RobotDynamics.discrete_dynamics
-    x_t^k[1:n_y] >= y_{min,t} - e_t^k
-    x_t^k[1:n_y] <= y_{max,t} - e_t^k
-    u_t >= u_{min,t}
-    u_t <= u_{max,t}.
+subject to:
+```math
+\\begin{aligned}
+\\forall k, \\forall t \\\\
+x_{t+1}^{[k]} &= f_{\\theta^{[k]}}(x_t^{[k]}, u_t) + v_t^{[k]} \\\\
+x_{t, 1:n_y}^{[k]} &\\geq y_{\\mathrm{min},\\ t} - e_t^{[k]} \\\\
+x_{t, 1:n_y}^{[k]} &\\leq y_{\\mathrm{max},\\ t} - e_t^{[k]} \\\\
+u_t &\\geq u_{\\mathrm{min},\\ t} \\\\
+u_t &\\leq u_{\\mathrm{max},\\ t}.
+\\end{aligned}
+```
 
-Note that the output constraints imply the measurement function y_t^k = x_t^k[1:n_y].
-Further note that the states of the individual models x^k are combined in the vector x_vec of dimension K * n_x.
+Note that the output constraints imply the measurement function ``y_t^{[k]} = x_{t, 1:n_y}^{[k]}``.
+Further note that the states of the individual models (``x^{[1:k]}``) are combined in the vector `x_vec` of dimension K * n_x.
 
 # Arguments
 - `PG_samples`: PG samples
 - `phi`: basis functions
-- `R`: variance of zero-mean Gaussian measurement noise - only used if e_vec is not passed
+- `R`: variance of zero-mean Gaussian measurement noise - only used if `e_vec` is not passed
 - `H`: horizon of the OCP
 - `u_min`: array of dimension 1 x 1 or 1 x H containing the minimum control input for all timesteps
 - `u_max`: array of dimension 1 x 1 or 1 x H containing the maximum control input for all timesteps
 - `y_min`: array of dimension 1 x 1 or 1 x H containing the minimum system output for all timesteps
 - `y_max`: array of dimension 1 x 1 or 1 x H containing the maximum system output for all timesteps
 - `R_cost_diag`: parameter of the diagonal quadratic cost function
-- `x_vec_0`: vector with K*n_x elements containing the initial state of all models - if not provided, the initial states are sampled based on the PGS samples
+- `x_vec_0`: vector with ``K n_x`` elements containing the initial state of all models - if not provided, the initial states are sampled based on the PGS samples
 - `v_vec`: array of dimension n_x x H x K that contains the process noise for all models and all timesteps - if not provided, the noise is sampled based on the PGS samples
-- `e_vec`: array of dimension n_y x H x K that contains the measurement noise for all models and all timesteps - if not provided, the noise is sampled based on the provided R
+- `e_vec`: array of dimension n_y x H x K that contains the measurement noise for all models and all timesteps - if not provided, the noise is sampled based on the provided `R`
 - `u_init`: initial guess for the optimal trajectory
-- `K_pre_solve`: if K_pre_solve > 0, an initial guess for the optimal trajectory is obtained by solving the OCP with only K_pre_solve < K models
+- `K_pre_solve`: if `K_pre_solve` > 0, an initial guess for the optimal trajectory is obtained by solving the OCP with only `K_pre_solve` < `K` models
 - `active_constraints`: vector containing the indices of the models, for which the output constraints are active - if not provided, the output constraints are considered for all models
 - `opts`: SolverOptions struct containing options of the solver
 - `print_progress`: if set to true, the progress is printed
@@ -308,9 +313,10 @@ end
 """
     epsilon(s::Int64, K::Int64, β::Float64)
 
-Determine the parameter ϵ. 1-ϵ corresponds to a bound on the probability that the incurred cost exceeds the worst-case cost or that the constraints are violated when the input trajectory u_{0:H} is applied to the unknown system.
-ϵ is the unique solution over the interval (0,1) of the polynomial equation in the v variable:
-binomial(K, s) * (1 - v)^(K - s) - (β / K) * ∑_{m = s}^{K - 1} binomial(m, s) * (1 - v)^(m - s) = 0.
+Determine the parameter ``\\epsilon``. ``1-\\epsilon`` corresponds to a bound on the probability that the incurred cost exceeds the worst-case cost or that the constraints are violated when the input trajectory ``u_{0:H}`` is applied to the unknown system.
+``\\epsilon`` is the unique solution over the interval ``(0,1)`` of the polynomial equation in the ``v`` variable:
+
+``\\binom{K}{s}(1-v)^{K-s}-\\frac{\\beta}{K}\\sum_{m=s}^{K-1}\\binom{m}{s}(1-v)^{m-s}=0``.
 
 # Arguments
 - `s`: cardinality of the support sub-sample 
@@ -318,7 +324,9 @@ binomial(K, s) * (1 - v)^(K - s) - (β / K) * ∑_{m = s}^{K - 1} binomial(m, s)
 - `β`: confidence parameter
 
 This function is based on the paper
+
     S. Garatti and M. C. Campi, “Risk and complexity in scenario optimization,” Mathematical Programming, vol. 191, no. 1, pp. 243–279, 2022.
+
 and the code provided in the appendix.
 """
 function epsilon(s::Int64, K::Int64, β::Float64)
@@ -353,25 +361,30 @@ end
 """
     solve_PG_OCP_greedy_guarantees(PG_samples::Vector{PG_sample}, phi::Function, R, H, u_min, u_max, y_min, y_max, R_cost_diag, β; x_vec_0=nothing, v_vec=nothing, e_vec=nothing, u_init=nothing, K_pre_solve=0, opts=nothing, print_progress=true)
 
-Solve the following optimal control problem and determine a support sub-sample with cardinality s via a greedy constraint removal. 
-Based on the cardinality s, a bound on the probability that the incurred cost exceeds the worst-case cost or that the constraints are violated when the input trajectory u_{0:H} is applied to the unknown system is calculated.
+Solve the following optimal control problem and determine a support sub-sample with cardinality ``s`` via a greedy constraint removal. 
+Based on the cardinality ``s``, a bound on the probability that the incurred cost exceeds the worst-case cost or that the constraints are violated when the input trajectory ``u_{0:H}`` is applied to the unknown system is calculated (i.e., ``1-\\epsilon`` is determined).
 
-min ∑_{∀t} 1/2 * u_t * Diagonal(R_cost_diag) * u_t
+``\\min \\sum_{t=0}^{H} \\frac{1}{2}  u_t  \\operatorname{diag}(R_{\\mathrm{cost}}) u_t``
 
-subject to: ∀k, ∀t
-    x_{t+1}^k = f_{θ^k}(x_t^k, u_t) + v_t^k - implemented in RobotDynamics.discrete_dynamics
-    x_t^k[1:n_y] >= y_{min,t} - e_t^k
-    x_t^k[1:n_y] <= y_{max,t} - e_t^k
-    u_t >= u_{min,t}
-    u_t <= u_{max,t}.
+subject to:
+```math
+\\begin{aligned}
+\\forall k, \\forall t \\\\
+x_{t+1}^{[k]} &= f_{\\theta^{[k]}}(x_t^{[k]}, u_t) + v_t^{[k]} \\\\
+x_{t, 1:n_y}^{[k]} &\\geq y_{\\mathrm{min},\\ t} - e_t^{[k]} \\\\
+x_{t, 1:n_y}^{[k]} &\\leq y_{\\mathrm{max},\\ t} - e_t^{[k]} \\\\
+u_t &\\geq u_{\\mathrm{min},\\ t} \\\\
+u_t &\\leq u_{\\mathrm{max},\\ t}.
+\\end{aligned}
+```
 
-Note that the output constraints imply the measurement function y_t^k = x_t^k[1:n_y].
-Further note that the states of the individual models x^k are combined in the vector x_vec of dimension K * n_x.
+Note that the output constraints imply the measurement function ``y_t^{[k]} = x_{t, 1:n_y}^{[k]}``.
+Further note that the states of the individual models (``x^{[1:k]}``) are combined in the vector `x_vec` of dimension K * n_x.
 
 # Arguments
 - `PG_samples`: PG samples
 - `phi`: basis functions
-- `R`: variance of zero-mean Gaussian measurement noise - only used if e_vec is not passed
+- `R`: variance of zero-mean Gaussian measurement noise - only used if `e_vec` is not passed
 - `H`: horizon of the OCP
 - `u_min`: array of dimension 1 x 1 or 1 x H containing the minimum control input for all timesteps
 - `u_max`: array of dimension 1 x 1 or 1 x H containing the maximum control input for all timesteps
@@ -381,9 +394,9 @@ Further note that the states of the individual models x^k are combined in the ve
 - `β`: confidence parameter
 - `x_vec_0`: vector with K*n_x elements containing the initial state of all models - if not provided, the initial states are sampled based on the PGS samples
 - `v_vec`: array of dimension n_x x H x K that contains the process noise for all models and all timesteps - if not provided, the noise is sampled based on the PGS samples
-- `e_vec`: array of dimension n_y x H x K that contains the measurement noise for all models and all timesteps - if not provided, the noise is sampled based on the provided R
+- `e_vec`: array of dimension n_y x H x K that contains the measurement noise for all models and all timesteps - if not provided, the noise is sampled based on the provided `R`
 - `u_init`: initial guess for the optimal trajectory
-- `K_pre_solve`: if K_pre_solve > 0, an initial guess for the optimal trajectory is obtained by solving the OCP with only K_pre_solve < K models
+- `K_pre_solve`: if `K_pre_solve` > 0, an initial guess for the optimal trajectory is obtained by solving the OCP with only `K_pre_solve` < `K` models
 - `opts`: SolverOptions struct containing options of the solver
 - `print_progress`: if set to true, the progress is printed
 """

@@ -3,8 +3,7 @@
 # This script reproduces Figure 3. For the results given in Table IV, this script is repeated with seeds 1:100.
 # Please note that the results depend heavily on random numbers and that changing the order of the generated random numbers (e.g., by executing commented-out code parts) changes the results.
 
-include("../src/PGopt.jl")
-using .PGopt
+using PGopt
 using LinearAlgebra
 using Random
 using Distributions

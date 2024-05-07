@@ -13,7 +13,8 @@ Then execute the scripts `autocorrelation.jl`, `PG_OCP_known_basis_functions.jl`
 
 Tested with Windows 11 and Julia 1.10.
 
-## List of files
+## List of examples
+The following examples can be found in the folder [examples](examples).
 
 ### autocorrelation.jl
 This script reproduces the normalized auto-correlation function plot (Figure 1) in Section V-B of the paper.
@@ -57,6 +58,9 @@ The method presented in the paper ["A flexible state–space model for learning 
 The runtime of the script is about 2 hours on a standard laptop. Using an improved phi function can reduce the runtime to about 50 minutes, but the results change slightly due to numerical reasons. Further explanations can be found in the source code.
 
 For the results in Table IV of the paper, this script is repeated with seeds 1:100.
+
+## List of source code files
+The following files in the folder [src](src) contain the PGopt source code.
 
 ### PGopt.jl
 Defines the module `PGopt`, which contains the functions defined in `particle_Gibbs.jl` and `optimal_control_Altro.jl`.

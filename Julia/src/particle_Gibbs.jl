@@ -1,14 +1,16 @@
 """
     systematic_resampling(W, N)
 
-Sample N indices according to the weights W.
+Sample `N` indices according to the weights `W`.
 
 # Arguments
 - `W`: vector containing the weights of the particles
 - `N`: number of indices to be sampled
 
 This function is based on the paper
+
     A. Svensson and T. B. Schön, “A flexible state–space model for learning nonlinear dynamical systems,” Automatica, vol. 80, pp. 189–199, 2017.
+
 and the code provided in the supplementary material.
 """
 function systematic_resampling(W, N)
@@ -33,19 +35,21 @@ end
 """
     MNIW_sample(Phi, Psi, Sigma, V, Lambda_Q, ell_Q, T)
 
-Sample new model parameters (A, Q) from the conditional distribution p(A, Q | x_T:-1), which is a matrix normal inverse Wishart (MNIW) distribution.
+Sample new model parameters ``\\{A, Q\\}`` from the conditional distribution ``p(A, Q | x_{T:-1})``, which is a matrix normal inverse Wishart (MNIW) distribution.
 
 # Arguments
 - `Phi`: statistic; see paper below for definition
 - `Psi`: statistic; see paper below for definition
 - `Sigma`: statistic; see paper below for definition
-- `V`: left covariance matrix of MN prior on A
-- `Lambda_Q`: scale matrix of IW prior on Q
-- `ell_Q`: degrees of freedom of IW prior on Q
+- `V`: left covariance matrix of MN prior on ``A``
+- `Lambda_Q`: scale matrix of IW prior on ``Q``
+- `ell_Q`: degrees of freedom of IW prior on ``Q``
 - `T`: length of the training trajectory
 
 This function is based on the paper
+
     A. Svensson and T. B. Schön, “A flexible state–space model for learning nonlinear dynamical systems,” Automatica, vol. 80, pp. 189–199, 2017.
+
 and the code provided in the supplementary material.
 """
 function MNIW_sample(Phi, Psi, Sigma, V, Lambda_Q, ell_Q, T)
@@ -78,29 +82,32 @@ end
 """
     particle_Gibbs(u_training, y_training, K, K_b, k_d, N, phi::Function, Lambda_Q, ell_Q, Q_init, V, A_init, x_init_dist, g, R; x_prim=nothing)
 
-Run particle Gibbs sampler with ancestor sampling to obtain samples (A, Q, x_T:-1) from the joint parameter and state posterior distribution p(A, Q, x_T:-1 | D=(u_training, y_training)).
+Run particle Gibbs sampler with ancestor sampling to obtain samples ``\\{A, Q, x_{T:-1}\\}^{[1:K]}`` from the joint parameter and state posterior distribution ``p(A, Q, x_{T:-1} \\mid \\mathbb{D}=\\{u_{T:-1}, y_{T:-1}\\})``.
 
 # Arguments
 - `u_training`: training input trajectory
 - `y_training`: training output trajectory
 - `K`: number of models/scenarios to be sampled
-- `K_b': length of the burn in period
+- `K_b`: length of the burn in period
 - `k_d`: number of models/scenarios to be skipped to decrease correlation (thinning)
 - `N`: number of particles
-- `phi': basis functions
-- `Lambda_Q`: scale matrix of IW prior on Q
-- `ell_Q`: degrees of freedom of IW prior on Q
-- `Q_init`: initial value of Q
-- `V`: left covariance matrix of MN prior on A
-- `A_init`: initial value of A
+- `phi`: basis functions
+- `Lambda_Q`: scale matrix of IW prior on ``Q``
+- `ell_Q`: degrees of freedom of IW prior on ``Q``
+- `Q_init`: initial value of ``Q``
+- `V`: left covariance matrix of MN prior on ``A``
+- `A_init`: initial value of ``A``
 - `x_init_dist`: distribution of the initial state
 - `g`: observation function
 - `R`: variance of zero-mean Gaussian measurement noise
 - `x_prim`: prespecified trajectory for the first iteration
 
 This function is based on the papers
+
     A. Svensson and T. B. Schön, “A flexible state–space model for learning nonlinear dynamical systems,” Automatica, vol. 80, pp. 189–199, 2017.
+
     F. Lindsten, T. B. Schön, and M. Jordan, “Ancestor sampling for particle Gibbs,” Advances in Neural Information Processing Systems, vol. 25, 2012.
+
 and the code provided in the supplementary material.
 """
 function particle_Gibbs(u_training, y_training, K, K_b, k_d, N, phi::Function, Lambda_Q, ell_Q, Q_init, V, A_init, x_init_dist, g, R; x_prim=nothing)
@@ -238,7 +245,7 @@ Simulate the PGS samples forward in time and compare the predictions to the test
 - `phi`: basis functions
 - `g`: observation function
 - `R`: variance of zero-mean Gaussian measurement noise
-- `k_n`: each model is simulated k_n times
+- `k_n`: each model is simulated ``k_n`` times
 - `u_test`: test input
 - `y_test`: test output
 """
@@ -374,7 +381,7 @@ end
 """
     plot_autocorrelation(PG_samples::Vector{PG_sample}; max_lag=0)
 
-Plot the autocorrelation function (ACF) of the PG samples. This might be helpful when adjusting the thinning parameter k_d.
+Plot the autocorrelation function (ACF) of the PG samples. This might be helpful when adjusting the thinning parameter ``k_d``.
 
 # Arguments
 - `PG_samples`: PG samples

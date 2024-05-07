@@ -14,8 +14,8 @@ rng(5);
 addpath('..\src')
 
 % Import CasADi - insert your path here.
-% addpath('<yourpath>/casadi-3.6.5-windows64-matlab2018b') 
-% import casadi.*
+addpath('<yourpath>/casadi-3.6.5-windows64-matlab2018b') 
+import casadi.*
 
 %% Learning parameters
 K = 200; % number of PG samples

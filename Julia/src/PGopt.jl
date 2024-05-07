@@ -14,7 +14,7 @@ using ForwardDiff
 using FiniteDiff
 using SpecialFunctions
 
-export PG_sample, particle_Gibbs, test_prediction, plot_predictions, plot_autocorrelation, solve_PG_OCP, solve_PG_OCP_greedy_guarantees
+export PG_sample, particle_Gibbs, systematic_resampling, MNIW_sample, test_prediction, plot_predictions, plot_autocorrelation, solve_PG_OCP, solve_PG_OCP_greedy_guarantees, epsilon
 
 # Struct for the samples of the PGS algorithm
 mutable struct PG_sample
