@@ -20,8 +20,8 @@ jobs:
         with:
           version: '1.10'
       - uses: julia-actions/cache@v1
-      # - name: Install dependencies
-      #  run: julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path="Julia")); Pkg.instantiate()'
+      - name: Install dependencies
+        run: julia --project=Julia/ -e 'using Pkg; Pkg.instantiate();'
       - name: Build and deploy
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # If authenticating with GitHub Actions token
