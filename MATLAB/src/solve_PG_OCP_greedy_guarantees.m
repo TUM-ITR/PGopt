@@ -198,7 +198,7 @@ if solve_successful
 
     % Print s, epsilon, and runtime.
     time_guarantees = toc(guarantees_timer);
-    fprintf("### Support sub sample found\nCardinality of the support sub-sample (s): %i\nMax. constraint violation probability (1-epsilon): %.2f %%\nTime to compute u*: %.2f s\nTime to compute 1-epsilon: %.2f s\n", s, 100-epsilon_perc, time_first_solve, time_guarantees)
+    fprintf("### Support sub-sample found\nCardinality of the support sub-sample (s): %i\nMax. constraint violation probability (1-epsilon): %.2f %%\nTime to compute u*: %.2f s\nTime to compute 1-epsilon: %.2f s\n", s, 100-epsilon_perc, time_first_solve, time_guarantees)
 else
     % In case the initial problem is infeasible, skip the computation of guarantees.
     warning("No feasible solution found for the initial problem. Skipping computation of guarantees.");

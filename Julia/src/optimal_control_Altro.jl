@@ -78,7 +78,7 @@ u_t &\\leq u_{\\mathrm{max},\\ t}.
 ```
 
 Note that the output constraints imply the measurement function ``y_t^{[k]} = x_{t, 1:n_y}^{[k]}``.
-Further note that the states of the individual models (``x^{[1:k]}``) are combined in the vector `x_vec` of dimension K * n_x.
+Further note that the states of the individual models (``x^{[1:K]}``) are combined in the vector `x_vec` of dimension K * n_x.
 
 # Arguments
 - `PG_samples`: PG samples
@@ -379,7 +379,7 @@ u_t &\\leq u_{\\mathrm{max},\\ t}.
 ```
 
 Note that the output constraints imply the measurement function ``y_t^{[k]} = x_{t, 1:n_y}^{[k]}``.
-Further note that the states of the individual models (``x^{[1:k]}``) are combined in the vector `x_vec` of dimension K * n_x.
+Further note that the states of the individual models (``x^{[1:K]}``) are combined in the vector `x_vec` of dimension K * n_x.
 
 # Arguments
 - `PG_samples`: PG samples
@@ -541,7 +541,7 @@ function solve_PG_OCP_greedy_guarantees(PG_samples::Vector{PG_sample}, phi::Func
 
         # Print s, ϵ, and runtime.
         time_guarantees = time() - guarantees_timer
-        @printf("### Support sub sample found\nCardinality of the support sub-sample (s): %i\nMax. constraint violation probability (1-epsilon): %.2f %%\nTime to compute u*: %.2f s\nTime to compute 1-epsilon: %.2f s\n", s, 100 - epsilon_perc, time_first_solve, time_guarantees)
+        @printf("### Support sub-sample found\nCardinality of the support sub-sample (s): %i\nMax. constraint violation probability (1-epsilon): %.2f %%\nTime to compute u*: %.2f s\nTime to compute 1-epsilon: %.2f s\n", s, 100 - epsilon_perc, time_first_solve, time_guarantees)
     else
         # In case the initial problem is infeasible, skip the computation of guarantees.
         @warn "No feasible solution found for the initial problem. Skipping computation of guarantees."

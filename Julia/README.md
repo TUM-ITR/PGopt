@@ -1,4 +1,6 @@
 # Julia
+[![Dev](https://img.shields.io/badge/docs-latest-blue.svg)](https://TUM-ITR.github.io/PGopt)
+
 This folder contains the Julia implementation of `PGopt`, which does not require proprietary software. The open-source solver [Altro](https://github.com/RoboticExplorationLab/Altro.jl) is used for the optimization. The results presented in the paper were generated with this version, and the software reproduces these results exactly.
 
 **Please note that this version has several limitations: only cost functions of the form $J_H=\sum\nolimits_{t=0}^H \frac{1}{2} u_t R u_t$, measurement functions of the form $y=x_{1:n_y}$, and output constraints of the form $y_\mathrm{min} \leq y \leq y_\mathrm{max}$ are supported.**
@@ -35,7 +37,7 @@ This script reproduces the results of the optimal control approach with known ba
 </p>
 
 ```
-### Support sub sample found
+### Support sub-sample found
 Cardinality of the support sub-sample (s): 7
 Max. constraint violation probability (1-epsilon): 10.22 %
 ```

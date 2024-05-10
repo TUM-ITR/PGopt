@@ -29,7 +29,7 @@ n_u = 1 # number of control inputs
 n_y = 1 # number of outputs
 
 # Define basis functions - assumed to be known in this example.
-# Make sure that phi(x,u) is defined in vectorized form, i.e., phi(zeros(n_x,N), zeros(n_u, N)) should return a matrix of dimension (n_phi, N).
+# Make sure that phi(x, u) is defined in vectorized form, i.e., phi(zeros(n_x, N), zeros(n_u, N)) should return a matrix of dimension (n_phi, N).
 # Scaling the basis functions facilitates the exploration of the posterior distribution and reduces the required thinning parameter k_d.
 n_phi = 5 # number of basis functions
 phi(x, u) = [0.1 * x[1, :] 0.1 * x[2, :] u[1, :] 0.01 * cos.(3 * x[1, :]) .* x[2, :] 0.1 * sin.(2 * x[2, :]) .* u[1, :]]' # basis functions
@@ -51,7 +51,7 @@ x_init_var = 1 * I # variance
 x_init_dist = MvNormal(x_init_mean, x_init_var)
 
 # Define measurement model - assumed to be known (without loss of generality).
-# Make sure that g(x,u) is defined in vectorized form, i.e., g(zeros(n_x,N), zeros(n_u, N)) should return a matrix of dimension (n_y, N).
+# Make sure that g(x, u) is defined in vectorized form, i.e., g(zeros(n_x, N), zeros(n_u, N)) should return a matrix of dimension (n_y, N).
 g(x, u) = [1 0] * x # observation function
 R = 0.1 # variance of zero-mean Gaussian measurement noise
 

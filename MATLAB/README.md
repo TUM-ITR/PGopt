@@ -39,7 +39,7 @@ This script produces results for the optimal control approach with known basis f
 </p>
 
 ```
-### Support sub sample found
+### Support sub-sample found
 Cardinality of the support sub-sample (s): 8
 Max. constraint violation probability (1-epsilon): 11.00 %
 ```
