@@ -1,7 +1,8 @@
 """
     systematic_resampling(W, N)
 
-Sample `N` indices according to the weights `W`.
+Sample `N` indices according to the weights `W`. 
+This function could be replaced by the function `wsample` from StatsBase.jl but is kept to minimize the differences between the Julia and the MATLAB implementations.
 
 # Arguments
 - `W`: vector containing the weights of the particles

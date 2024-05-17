@@ -1,15 +1,15 @@
-# This code reproduces the results of the optimal control approach with generic basis functions given in Section V-C of the paper 
+# This code produces results for the optimal control approach with generic basis functions similar to the ones given in Section V-B (Fig. 3) of the paper
 # "Learning-Based Optimal Control with Performance Guarantees for Unknown Systems with Latent States", available as pre-print on arXiv: https://arxiv.org/abs/2303.17963.
-# This script reproduces Figure 3. For the results given in Table IV, this script is repeated with seeds 1:100.
-# Please note that the results depend heavily on random numbers and that changing the order of the generated random numbers (e.g., by executing commented-out code parts) changes the results.
+# The solver Ipopt is used to solve the optimal control problem.
+# Since, for the results in the paper, the solver Altro was used to solve the optimal control problem, the results are not exactly reproduced.
 
 using PGopt
 using LinearAlgebra
 using Random
 using Distributions
-using Printf
 using Plots
-using Altro
+using JuMP
+import HSL_jll
 
 # Specify seed (for reproducible results).
 Random.seed!(82)
@@ -83,33 +83,6 @@ j_vec = reverse(j_vec, dims=3)
 
 # Define basis functions phi.
 # This function evaluates Φ_{1 : n_x+n_u} according to eq. (5).
-# There are two implementations of the phi function: 
-#
-# The first exactly reproduces the results given in the paper.
-#
-# After the paper's publication, a much more efficient implementation was found, which, for numerical reasons, produces slightly different results (differences in the range 10^-16 when called once). 
-# However, these minimal deviations lead to noticeably different results since the function phi is called recursively T * N * K_total times (= very often). 
-# This version is currently commented-out to ensure the reproducibility of the results provided in the paper.
-# However, if you do not intend to reproduce the results of the paper, the currently commented-out version of the phi function should be used.
-
-# This is the original implementation, which is slow but exactly reproduces the results given in the paper.
-function phi_sampling(x, u)
-    # Initialize.
-    z = vcat(u, x) # augmented state
-    phi = Array{Float64}(undef, n_phi, size(z, 2))
-
-    Threads.@threads for i in axes(z, 2)
-        phi_temp = ones(n_phi)
-        for k in axes(z, 1)
-            phi_temp .= phi_temp .* ((1 ./ (sqrt.(L[:, :, k]))) .* sin.((pi .* j_vec[:, :, k] .* (z[k, i] .+ L[:, :, k])) ./ (2 .* L[:, :, k])))
-        end
-        phi[:, i] .= phi_temp
-    end
-    return phi
-end
-
-# This is the improved implementation, which is significantly faster but yields slightly different results.
-#=
 # Precompute.
 L_sqrt_inv = 1 ./ sqrt.(L)
 pi_j_over_2L = pi .* j_vec ./ (2 .* L)
@@ -124,7 +97,6 @@ function phi_sampling(x, u)
 
     return phi
 end
-=#
 
 # Prior for Q - inverse Wishart distribution
 ell_Q = 10 # degrees of freedom
@@ -219,48 +191,115 @@ time_sampling = time() - sampling_timer
 # Horizon
 H = 41
 
-# Define constraints for u and y.
-u_max = [5] # max control input
-u_min = [-5] # min control input
-y_max = reshape(fill(Inf, H), (1, H)) # max system output
-y_min = reshape([-fill(Inf, 20); 2 * ones(6); -fill(Inf, 15)], (1, H)) # min system output
+# Define constraints for u.
+u_max = repeat([5], 1, H) # max control input
+u_min = repeat([-5], 1, H) # min control input
+n_input_const = sum(isfinite.(u_min)) + sum(isfinite.(u_max))
 
-# Define cost function.
-# Objective: min ∑_{∀t} 1/2 * u_t * Diagonal(R_cost_diag) * u_t.
-R_cost_diag = [2] # diagonal of R_cost
+function bounded_input(u::Array{VariableRef})
+    # Initialize constraint vector.
+    h_u = Array{AffExpr}(undef, n_input_const)
 
-# Redefine phi - the optimization cannot deal with multithreading or in-place computations.
-# This function evaluates Φ_{1 : n_x+n_u} according to eq. (5).
-function phi_opt(x, u)
-    # Initialize.
-    z = vcat(u, x) # augmented state
-    phi = Array{Any}(undef, n_phi, size(z, 2))
-
-    for i in axes(z, 2)
-        phi_temp = ones(n_phi)
-        for k in axes(z, 1)
-            phi_temp = phi_temp .* ((1 ./ (sqrt.(L[:, :, k]))) .* sin.((pi .* j_vec[:, :, k] .* (z[k, i] .+ L[:, :, k])) ./ (2 .* L[:, :, k])))
+    # Construct constraint vector - constraints are only considered if they are finite.
+    i = 1
+    for t in 1:H
+        for n in 1:n_u
+            if isfinite(u_min[n, t])
+                h_u[i] = u_min[n, t] - u[n, t]
+                i += 1
+            end
+            if isfinite(u_max[n, t])
+                h_u[i] = u[n, t] - u_max[n, t]
+                i += 1
+            end
         end
-        phi[:, i] = phi_temp
     end
-    return phi
+    return h_u
 end
 
-# Optimization settings
-opts = SolverOptions()
-opts.constraint_tolerance = 1e-5
-opts.cost_tolerance = 1e-3
-opts.cost_tolerance_intermediate = 10 * opts.cost_tolerance
-opts.projected_newton_tolerance = sqrt(opts.constraint_tolerance)
-opts.penalty_scaling = 25
-opts.penalty_initial = 1e4
-opts.iterations = 5000
-opts.max_cost_value = 1e12
-opts.static_bp = false
-opts.square_root = true
+function bounded_input(u::Array{<:Number})
+    # Initialize constraint vector.
+    h_u = Array{Float64}(undef, n_input_const)
 
-# Solve PG OCP.
-x_opt, u_opt, y_opt, J_opt, penalty_max = solve_PG_OCP(PG_samples, phi_opt, R, H, u_min, u_max, y_min, y_max, R_cost_diag; K_pre_solve=20, opts=opts)[[1, 2, 3, 4, 8]]
+    # Construct constraint vector - constraints are only considered if they are finite.
+    i = 1
+    for t in 1:H
+        for n in 1:n_u
+            if isfinite(u_min[n, t])
+                h_u[i] = u_min[n, t] - u[n, t]
+                i += 1
+            end
+            if isfinite(u_max[n, t])
+                h_u[i] = u[n, t] - u_max[n, t]
+                i += 1
+            end
+        end
+    end
+    return h_u
+end
+
+# Define constraints for y.
+y_max = reshape(fill(Inf, H), (1, H)) # max system output
+y_min = reshape([-fill(Inf, 20); 2 * ones(6); -fill(Inf, 15)], (1, H)) # min system output
+n_output_const = sum(isfinite.(y_min)) + sum(isfinite.(y_max))
+
+function bounded_output(u::Array{VariableRef}, x::Array{VariableRef}, y::Array{VariableRef})
+    # Initialize constraint vector.
+    h_scenario = Array{AffExpr}(undef, n_output_const)
+
+    # Construct constraint vector - constraints are only considered if they are finite.
+    i = 1
+    for t in 1:H
+        for n in 1:n_y
+            if isfinite(y_min[n, t])
+                h_scenario[i] = y_min[n, t] - y[n, t]
+                i += 1
+            end
+            if isfinite(y_max[n, t])
+                h_scenario[i] = y[n, t] - y_max[n, t]
+                i += 1
+            end
+        end
+    end
+    return h_scenario
+end
+
+function bounded_output(u::Array{<:Number}, x::Array{<:Number}, y::Array{<:Number})
+    # Initialize constraint vector.
+    h_scenario = Array{Float64}(undef, n_output_const)
+
+    # Construct constraint vector - constraints are only considered if they are finite.
+    i = 1
+    for t in 1:H
+        for n in 1:n_y
+            if isfinite(y_min[n, t])
+                h_scenario[i] = y_min[n, t] - y[n, t]
+                i += 1
+            end
+            if isfinite(y_max[n, t])
+                h_scenario[i] = y[n, t] - y_max[n, t]
+                i += 1
+            end
+        end
+    end
+    return h_scenario
+end
+
+# Define cost function.
+# Objective: min ∑_{∀t} u_t^2.
+function cost_function(u) 
+    cost = sum(u.^2)
+    return cost
+end
+
+# Ipopt options
+Ipopt_options = Dict("max_iter" => 10000, "tol" => 1e-8, "hsllib" => HSL_jll.libhsl_path, "linear_solver" => "ma57")
+
+# Confidence parameter for the theoretical guarantees
+β = 0.01
+
+# Solve the PG OCP.
+u_opt, x_opt, y_opt, J_opt, solve_successful, iterations, mu = solve_PG_OCP_Ipopt(PG_samples, phi, g, R, H, cost_function, bounded_output, bounded_input; J_u=true, K_pre_solve=20, solver_opts=Ipopt_options)
 
 # Apply input trajectory to the actual system.
 y_sys = Array{Float64}(undef, n_y, H)
