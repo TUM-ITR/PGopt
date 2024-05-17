@@ -140,11 +140,14 @@ cost_function = @(u) sum(u.^2);
 % Confidence parameter for the theoretical guarantees
 beta = 0.01;
 
+% Ipopt options
+Ipopt_options = struct('linear_solver', 'ma57', 'max_iter', 10000);
+
 % Solve the PG OCP.
-% [u_opt, x_opt, y_opt, J_opt, solve_successful, ~, ~] = solve_PG_OCP(PG_samples, phi, g, R, H, cost_function, scenario_constraints, input_constraints, 'J_u', true, 'K_pre_solve', 10);
+% [u_opt, x_opt, y_opt, J_opt, solve_successful, ~, ~] = solve_PG_OCP(PG_samples, phi, g, R, H, cost_function, scenario_constraints, input_constraints, 'J_u', true, 'K_pre_solve', 5);
 
 % Solve the PG OCP and determine complexity s and max constraint violation probability via greedy algorithm.
-[u_opt, x_opt, y_opt, J_opt, solve_successful, s, epsilon_prob, epsilon_perc, time_first_solve, time_guarantees, num_failed_optimizations] = solve_PG_OCP_greedy_guarantees(PG_samples, phi, g, R, H, cost_function, scenario_constraints, input_constraints, beta, 'J_u', true, 'K_pre_solve', 10);
+[u_opt, x_opt, y_opt, J_opt, solve_successful, s, epsilon_prob, epsilon_perc, time_first_solve, time_guarantees, num_failed_optimizations] = solve_PG_OCP_greedy_guarantees(PG_samples, phi, g, R, H, cost_function, scenario_constraints, input_constraints, beta, 'J_u', true, 'K_pre_solve', 5, 'solver_opts', Ipopt_options);
 
 %% Test solution
 if solve_successful

@@ -54,9 +54,8 @@ v_vec = [];
 e_vec = [];
 u_init = [];
 K_pre_solve = 0;
-active_scenarios = 1:K;
 casadi_opts = struct('expand', 1);
-solver_opts = struct('linear_solver', 'ma57', 'max_iter', 10000);
+solver_opts = struct('max_iter', 10000);
 print_progress = true;
 
 % Read variable-length input argument list.
@@ -73,8 +72,6 @@ for i = 1:2:length(varargin)
         u_init = varargin{i+1};
     elseif strcmp('K_pre_solve', varargin{i})
         K_pre_solve = varargin{i+1};
-    elseif strcmp('active_constraints', varargin{i})
-        active_scenarios = varargin{i+1};
     elseif strcmp('casadi_opts', varargin{i})
         casadi_opts = varargin{i+1};
     elseif strcmp('solver_opts', varargin{i})
@@ -132,7 +129,6 @@ fprintf("### Started optimization of fully constrained problem\n");
 [u_init, ~, ~, ~, ~, ~, mu] = solve_PG_OCP(PG_samples, phi, g, R, H, J, h_scenario, h_u, 'J_u', J_u, 'x_vec_0', x_vec_0, 'v_vec', v_vec, 'e_vec', e_vec, 'u_init', u_init, 'K_pre_solve', K_pre_solve, 'casadi_opts', casadi_opts, 'solver_opts', solver_opts, 'print_progress', print_progress);
 
 % The OCP is solved again with initialization to obtain the optimal input u_opt.
-solver_opts.max_iter = 200; % reduce number of iterations
 solver_opts.mu_init = mu;
 disp("### Started optimization of fully constrained problem with initialization");
 [u_opt, x_opt, y_opt, J_opt, solve_successful, iter, ~] = solve_PG_OCP(PG_samples, phi, g, R, H, J, h_scenario, h_u, 'J_u', J_u, 'x_vec_0', x_vec_0, 'v_vec', v_vec, 'e_vec', e_vec, 'u_init', u_init, 'casadi_opts', casadi_opts, 'solver_opts', solver_opts, 'print_progress', print_progress);
@@ -167,21 +163,21 @@ if solve_successful
         fprintf("Started optimization with new constraint set\nIteration: %i/%i\n", i, K);
 
         % Temporarily remove the constraints corresponding to the PG samples with index i from the constraint set.
-        temp_constraints = active_scenarios(active_scenarios ~= scenarios_sorted(i));
+        temp_scenarios = active_scenarios(active_scenarios ~= scenarios_sorted(i));
 
         % Get the initial states of the active scenarios.
-        x_vec_0_temp = zeros(n_x*length(temp_constraints), 1);
-        for k = 1:length(temp_constraints)
-            x_vec_0_temp((k - 1)*n_x+1:n_x*k) = x_vec_0((temp_constraints(k) - 1)*n_x+1:n_x*temp_constraints(k));
+        x_vec_0_temp = zeros(n_x*length(temp_scenarios), 1);
+        for k = 1:length(temp_scenarios)
+            x_vec_0_temp((k - 1)*n_x+1:n_x*k) = x_vec_0((temp_scenarios(k) - 1)*n_x+1:n_x*temp_scenarios(k));
         end
 
         % Solve the OCP with reduced constraint set.
-        [u_opt_temp, ~, ~, J_opt_temp, solve_successful_temp, ~, ~] = solve_PG_OCP(PG_samples(temp_constraints), phi, g, R, H, J, h_scenario, h_u, 'J_u', J_u, 'x_vec_0', x_vec_0_temp, 'v_vec', v_vec(:, :, temp_constraints), 'e_vec', e_vec(:, :, temp_constraints), 'u_init', u_init, 'casadi_opts', casadi_opts, 'solver_opts', solver_opts, 'print_progress', print_progress);
+        [u_opt_temp, ~, ~, J_opt_temp, solve_successful_temp, ~, ~] = solve_PG_OCP(PG_samples(temp_scenarios), phi, g, R, H, J, h_scenario, h_u, 'J_u', J_u, 'x_vec_0', x_vec_0_temp, 'v_vec', v_vec(:, :, temp_scenarios), 'e_vec', e_vec(:, :, temp_scenarios), 'u_init', u_init, 'casadi_opts', casadi_opts, 'solver_opts', solver_opts, 'print_progress', print_progress);
 
         % If the optimization is successful and the solution does not change, permanently remove the constraints corresponding to the PG samples with index i from the constraint set.
         % A valid subsample has the same local minimum. However, since the numerical solver does not reach this minimum exactly, a threshold value is used here to check whether the solutions are the same.
         if solve_successful_temp && all(abs(u_opt_temp-u_opt) < 1e-6) && (abs(J_opt_temp-J_opt) < 1e-6)
-            active_scenarios = temp_constraints;
+            active_scenarios = temp_scenarios;
         elseif ~solve_successful_temp
             warning("Optimization with temporarily removed constraints failed. Proceeding with next candidate for a support sub-sample.");
             num_failed_optimizations = num_failed_optimizations + 1;

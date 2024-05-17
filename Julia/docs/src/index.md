@@ -12,9 +12,9 @@ This document describes the Julia implementation of `PGopt`, which does not requ
 Besides the Julia implementation, there is also a MATLAB implementation, which is more general and allows arbitrary cost functions $J_H(u_{1:H},x_{1:H},y_{1:H})$, measurement functions $y=g(x,u)$, and constraints $h(u_{1:H},x_{1:H},y_{1:H})$. Further information can be found [here](https://github.com/TUM-ITR/PGopt/tree/main/MATLAB).
 
 ## Installation
-PGopt can be installed using the Julia package manager. Start a Pkg REPL (press `]` in a Julia REPL), and install PGopt via
+`PGopt` can be installed using the Julia package manager. Start a Pkg REPL (press `]` in a Julia REPL), and install `PGopt` via
 ```
-pkg> add https://github.com/TUM-ITR/PGopt:Julia
+pkg>add https://github.com/TUM-ITR/PGopt:Julia
 ```
 
 Alternatively, to inspect the source code more easily, download the source code from [GitHub](https://github.com/TUM-ITR/PGopt). Navigate to the folder `PGopt/Julia`, start a Pkg REPL (press `]` in a Julia REPL), and install the dependencies via

@@ -12,7 +12,7 @@ function [u_opt, x_opt, y_opt, J_opt, solve_successful, iterations, mu] = solve_
 %       h_u: function with input argument u_1:H that returns the constraint vector for u; a feasible solution satisfy yield h_u <= 0
 %
 %   Variable-length input argument list:
-%       J_u: set to true if cost depends only on inputs u. This accelerates the optimization
+%       J_u: set to true if cost depends only on inputs u - this accelerates the optimization
 %       x_vec_0: vector with K*n_x elements containing the initial state of all models - if not provided, the initial states are sampled based on the PGS samples
 %       v_vec: array of dimension n_x x H x K that contains the process noise for all models and all timesteps - if not provided, the noise is sampled based on the PGS samples
 %       e_vec: array of dimension n_y x H x K that contains the measurement noise for all models and all timesteps - if not provided, the noise is sampled based on the provided R
@@ -50,7 +50,7 @@ e_vec = [];
 u_init = [];
 K_pre_solve = 0;
 casadi_opts = struct('expand', 1);
-solver_opts = struct('linear_solver', 'ma57', 'max_iter', 10000);
+solver_opts = struct('max_iter', 10000);
 print_progress = true;
 
 % Read variable-length input argument list.

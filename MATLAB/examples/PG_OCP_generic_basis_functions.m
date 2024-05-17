@@ -1,6 +1,6 @@
 % This code produces results for the optimal control approach with generic basis functions similar to the ones given in Section V-B (Fig. 3) of the paper
 % "Learning-Based Optimal Control with Performance Guarantees for Unknown Systems with Latent States", available as pre-print on arXiv: https://arxiv.org/abs/2303.17963.
-% Since the Julia implementation was used for the results in the paper, the results are not exactly reproduced due to different random numbers.
+% Since the Julia implementation was used for the results in the paper, the results are not exactly reproduced.
 
 % Clear
 clear;
@@ -170,7 +170,7 @@ PG_samples = particle_Gibbs(u_training, y_training, K, K_b, k_d, N, phi_sampling
 
 %% Test the learned models.
 % Test the models with the test data by simulating it forward in time.
-test_prediction(PG_samples, phi_sampling, g, R, 10, u_test, y_test);
+% test_prediction(PG_samples, phi_sampling, g, R, 10, u_test, y_test);
 
 %% Plot autocorrelation.
 % plot_autocorrelation(PG_samples, 'max_lag', 100)
@@ -198,8 +198,11 @@ cost_function = @(u) sum(u.^2);
 % This function is only used for the optimization as it is less efficient.
 phi = @(x, u) phi_opt(n_phi, n_z, L, j_vec, x, u);
 
+% Ipopt options
+Ipopt_options = struct('linear_solver', 'ma57', 'max_iter', 10000);
+
 % Solve the PG OCP.
-[u_opt, x_opt, y_opt, J_opt, solve_successful, ~, ~] = solve_PG_OCP(PG_samples, phi, g, R, H, cost_function, scenario_constraints, input_constraints, 'J_u', true, 'K_pre_solve', 10);
+[u_opt, x_opt, y_opt, J_opt, solve_successful, ~, ~] = solve_PG_OCP(PG_samples, phi, g, R, H, cost_function, scenario_constraints, input_constraints, 'J_u', true, 'K_pre_solve', 5, 'solver_opts', Ipopt_options);
 
 %% Test solution
 if solve_successful

@@ -1,5 +1,5 @@
 # Julia
-[![Dev](https://img.shields.io/badge/docs-latest-blue.svg)](https://TUM-ITR.github.io/PGopt)
+[![Dev](https://img.shields.io/badge/docs-stable-blue?logo=Julia&logoColor=white)](https://TUM-ITR.github.io/PGopt)
 
 This folder contains the Julia implementation of `PGopt`, which does not require proprietary software. The open-source solver [Altro](https://github.com/RoboticExplorationLab/Altro.jl) is used for the optimization. The results presented in the paper were generated with this version, and the software reproduces these results exactly.
 
