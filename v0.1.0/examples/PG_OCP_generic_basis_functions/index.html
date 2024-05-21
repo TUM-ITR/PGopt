@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Optimal control with generic basis functions ·  </title><meta name="title" content="Optimal control with generic basis functions ·  "/><meta property="og:title" content="Optimal control with generic basis functions ·  "/><meta property="twitter:title" content="Optimal control with generic basis functions ·  "/><meta name="description" content="Documentation for  ."/><meta property="og:description" content="Documentation for  ."/><meta property="twitter:description" content="Documentation for  ."/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img src="../../assets/logo.png" alt="  logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../../"> </a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">Introduction</a></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../autocorrelation/">Autocorrelation</a></li><li><a class="tocitem" href="../PG_OCP_known_basis_functions/">Optimal control with known basis functions</a></li><li class="is-active"><a class="tocitem" href>Optimal control with generic basis functions</a><ul class="internal"><li><a class="tocitem" href="#Define-parameters"><span>Define parameters</span></a></li><li><a class="tocitem" href="#Define-basis-functions"><span>Define basis functions</span></a></li><li><a class="tocitem" href="#Define-prior"><span>Define prior</span></a></li><li><a class="tocitem" href="#Generate-data"><span>Generate data</span></a></li><li><a class="tocitem" href="#Infer-model"><span>Infer model</span></a></li><li><a class="tocitem" href="#Define-and-solve-optimal-control-problem"><span>Define and solve optimal control problem</span></a></li></ul></li></ul></li><li><a class="tocitem" href="../../list_of_functions/">List of fuctions</a></li><li><a class="tocitem" href="../../reference/">Reference</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>Optimal control with generic basis functions</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Optimal control with generic basis functions</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/TUM-ITR/PGopt" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/TUM-ITR/PGopt/blob/main/Julia/docs/src/examples/PG_OCP_generic_basis_functions.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Optimal-control-with-generic-basis-functions"><a class="docs-heading-anchor" href="#Optimal-control-with-generic-basis-functions">Optimal control with generic basis functions</a><a id="Optimal-control-with-generic-basis-functions-1"></a><a class="docs-heading-anchor-permalink" href="#Optimal-control-with-generic-basis-functions" title="Permalink"></a></h1><p>This example reproduces the results of the optimal control approach with generic basis functions (Figure 3) given in Section V-C of the <a href="../../reference/">paper</a>.</p><p><img src="../../assets/PG_OCP_generic_basis_functions.svg" alt="autocorrelation"/></p><p>The method presented in the paper <a href="https://doi.org/10.1016/j.automatica.2017.02.030">&quot;A flexible state–space model for learning nonlinear dynamical systems&quot;</a> is utilized to systematically derive basis functions and priors for the parameters based on a reduced-rank GP approximation. Afterward, by calling the function <code>particle_Gibbs()</code>, samples are drawn from the posterior distribution using particle Gibbs sampling. These samples are then passed to the function <code>solve_PG_OCP()</code>, which solves the scenario OCP.</p><p>For the results in Table IV of the paper, this script is repeated with seeds 1:100.</p><p>A Julia script that contains all the steps described here can be found in the folder <code>PGopt/Julia/examples</code>.</p><p>The runtime of the script is about 2 hours on a standard laptop. Using an improved function <code>phi()</code> can reduce the runtime to about 50 minutes, but the results change slightly due to numerical reasons. Further explanations are given below.</p><h2 id="Define-parameters"><a class="docs-heading-anchor" href="#Define-parameters">Define parameters</a><a id="Define-parameters-1"></a><a class="docs-heading-anchor-permalink" href="#Define-parameters" title="Permalink"></a></h2><p>First, load packages and initialize.</p><pre><code class="language-julia hljs">using PGopt
+using LinearAlgebra
+using Random
+using Distributions
+using Printf
+using Plots
+
+# Specify seed (for reproducible results).
+Random.seed!(82)
+
+# Time PGS algorithm.
+sampling_timer = time()</code></pre><p>Then, specify the parameters of the algorithm.</p><pre><code class="language-julia hljs"># Learning parameters
+K = 100 # number of PG samples
+k_d = 50 # number of samples to be skipped to decrease correlation (thinning)
+K_b = 1000 # length of burn-in period
+N = 30 # number of particles of the particle filter
+
+# Number of states, etc.
+n_x = 2 # number of states
+n_u = 1 # number of control inputs
+n_y = 1 # number of outputs</code></pre><h2 id="Define-basis-functions"><a class="docs-heading-anchor" href="#Define-basis-functions">Define basis functions</a><a id="Define-basis-functions-1"></a><a class="docs-heading-anchor-permalink" href="#Define-basis-functions" title="Permalink"></a></h2><p>Then, generate generic basis functions and priors based on a reduced-rank GP approximation. The approach is described in the paper <a href="https://doi.org/10.1016/j.automatica.2017.02.030">&quot;A flexible state–space model for learning nonlinear dynamical systems&quot;</a>. The equation numbers given in the following refer to this paper.</p><pre><code class="language-julia hljs">n_phi_x = [5 5] # number of basis functions for each state
+n_phi_u = 5 # number of basis functions for the control input
+n_phi_dims = [n_phi_u n_phi_x] # array containing the number of basis functions for each input dimension
+n_phi = prod(n_phi_dims) # total number of basis functions
+l_x = 20
+L_x = [l_x l_x] # interval lengths for x
+L_u = 10 # interval length for u
+L = zeros(1, 1, n_z) # array containing the interval lengths
+L[1, 1, :] = [L_u L_x]
+
+# Hyperparameters of the squared exponential kernel
+l = [2] # length scale
+sf = 100 # scale factor
+
+# Initialize.
+j_vec = zeros(n_phi, 1, n_z) # contains all possible vectors j; j_vec[i, 1, :] corresponds to the vector j in eq. (5) for basis function i
+lambda = zeros(n_phi, n_z) # lambda[i, :] corresponds to the vector λ in eq. (9) (right-hand side) for basis function i</code></pre><p>In the following, all possible vectors <span>$j$</span> are constructed (i.e., <code>j_vec</code>). The possible combinations correspond to the Cartesian product <code>[1 : n_basis[1]] x ... x [1 : n_basis[end]]</code>.</p><pre><code class="language-julia hljs">cart_prod_sets = Array{Any}(undef, n_z) # array of arrays; cart_prod_sets[i] corresponds to the i-th set to be considered for the Cartesian product, i.e., [1 : n_basis[i]].
+for i = 1:n_z
+    cart_prod_sets[i] = Array(1:n_phi_dims[i])
+end
+
+subscript_values = Array{Int64}(undef, n_z) # contains the equivalent subscript values corresponding to a given single index i
+variants = [1; cumprod(n_phi_dims[1:end-1])] # required to convert the single index i to the equivalent subscript value
+
+# Construct Cartesian product and calculate spectral densities.
+for i in 1:n_phi
+    # Convert the single index i to the equivalent subscript values.
+    remaining = i - 1
+    for j in n_z:-1:1
+        subscript_values[j] = floor(remaining / variants[j]) + 1
+        remaining = mod(remaining, variants[j])
+    end
+
+    # Fill j_vec with the values belonging to the respective subscript indices.
+    for j in 1:n_z
+        j_vec[i, 1, j] = cart_prod_sets[j][subscript_values[j]]
+    end
+
+    # Calculate the eigenvalue of the Laplace operator corresponding to the vector j_vec[i, 1, :] - see eq. (9) (right-hand side).
+    lambda[i, :] = (pi .* j_vec[i, 1, :] ./ (2 * dropdims(L, dims=tuple(findall(size(L) .== 1)...)))) .^ 2
+end
+
+# Reverse j_vec.
+j_vec = reverse(j_vec, dims=3)</code></pre><p>Then, define basis functions phi. This function evaluates <span>$\phi_{1 : n_x+n_u}$</span> according to eq. (5). There are two implementations of the phi function.</p><h3 id="Original-implementation"><a class="docs-heading-anchor" href="#Original-implementation">Original implementation</a><a id="Original-implementation-1"></a><a class="docs-heading-anchor-permalink" href="#Original-implementation" title="Permalink"></a></h3><p>This implementation is the original implementation, which is slow but exactly reproduces the results given in the paper.</p><pre><code class="language-julia hljs">function phi_sampling(x, u)
+    # Initialize.
+    z = vcat(u, x) # augmented state
+    phi = Array{Float64}(undef, n_phi, size(z, 2))
+
+    Threads.@threads for i in axes(z, 2)
+        phi_temp = ones(n_phi)
+        for k in axes(z, 1)
+            phi_temp .= phi_temp .* ((1 ./ (sqrt.(L[:, :, k]))) .* sin.((pi .* j_vec[:, :, k] .* (z[k, i] .+ L[:, :, k])) ./ (2 .* L[:, :, k])))
+        end
+        phi[:, i] .= phi_temp
+    end
+    return phi
+end</code></pre><h3 id="Efficient-implementation"><a class="docs-heading-anchor" href="#Efficient-implementation">Efficient implementation</a><a id="Efficient-implementation-1"></a><a class="docs-heading-anchor-permalink" href="#Efficient-implementation" title="Permalink"></a></h3><p>After the paper&#39;s publication, a much more efficient implementation was found, which, for numerical reasons, produces slightly different results (differences in the range <span>$1\cdot 10^{-16}$</span> when called once).  However, these minimal deviations lead to noticeably different results since the function phi is called recursively <span>$T \cdot N \cdot K_{\mathrm{total}}$</span> times (= very often).  This is the improved implementation, which is significantly faster but yields slightly different results.</p><pre><code class="language-julia hljs"># Precompute.
+L_sqrt_inv = 1 ./ sqrt.(L)
+pi_j_over_2L = pi .* j_vec ./ (2 .* L)
+function phi_sampling(x, u)
+    # Initialize.
+    z = vcat(u, x) # augmented state
+    phi = ones(n_phi, size(z, 2))
+
+    for k in axes(z, 1)
+        phi .= phi .* (L_sqrt_inv[:, :, k] .* sin.(pi_j_over_2L[:, :, k] * (z[k, :] .+ L[:, :, k])&#39;))
+    end
+
+    return phi
+end</code></pre><h2 id="Define-prior"><a class="docs-heading-anchor" href="#Define-prior">Define prior</a><a id="Define-prior-1"></a><a class="docs-heading-anchor-permalink" href="#Define-prior" title="Permalink"></a></h2><p>Select the parameters of the inverse Wishart prior for <span>$Q$</span>.</p><pre><code class="language-julia hljs">ell_Q = 10 # degrees of freedom
+Lambda_Q = 100 * I(n_x) # scale matrix</code></pre><p>Determine the parameters of the matrix normal prior (with mean matrix <span>$0$</span>, right covariance matrix <span>$Q$</span> (see above), and left covariance matrix <span>$V$</span>) for <span>$A$</span>. <span>$V$</span> is derived from the GP approximation according to eq. (8b), (11a), and (9).</p><pre><code class="language-julia hljs">V_diagonal = Array{Float64}(undef, size(lambda, 1)) # diagonal of V
+for i in axes(lambda, 1)
+    V_diagonal[i] = sf^2 * sqrt(opnorm(2 * pi * Diagonal(repeat(l, trunc(Int, n_z / size(l, 1))) .^ 2))) * exp.(-(pi^2 * transpose(sqrt.(lambda[i, :])) * Diagonal(repeat(l, trunc(Int, n_z / size(l, 1))) .^ 2) * sqrt.(lambda[i, :])) / 2)
+end
+V = Diagonal(V_diagonal)</code></pre><p>Provide an initial guess for the parameters.</p><pre><code class="language-julia hljs">Q_init = Lambda_Q # initial Q
+A_init = zeros(n_x, n_phi) # initial A</code></pre><p>Choose the distribution of the initial state. Here, a normally distributed initial state is assumed.</p><pre><code class="language-julia hljs">x_init_mean = [2, 2] # mean
+x_init_var = 1 * I # variance
+x_init_dist = MvNormal(x_init_mean, x_init_var)</code></pre><p>Define the measurement model. It is assumed to be known (without loss of generality). Make sure that <span>$g(x, u)$</span> is defined in vectorized form, i.e., <code>g(zeros(n_x, N), zeros(n_u, N))</code> should return a matrix of dimension <code>(n_y, N)</code>.</p><pre><code class="language-julia hljs">g(x, u) = [1 0] * x # observation function
+R = 0.1 # variance of zero-mean Gaussian measurement noise</code></pre><h2 id="Generate-data"><a class="docs-heading-anchor" href="#Generate-data">Generate data</a><a id="Generate-data-1"></a><a class="docs-heading-anchor-permalink" href="#Generate-data" title="Permalink"></a></h2><p>Generate training data.</p><pre><code class="language-julia hljs"># Parameters for data generation
+T = 2000 # number of steps for training
+T_test = 500  # number of steps used for testing (via forward simulation - see below)
+T_all = T + T_test
+
+# Unknown system
+f_true(x, u) = [0.8 * x[1, :] - 0.5 * x[2, :] + 0.1 * cos.(3 * x[1, :]) .* x[2, :]; 0.4 * x[1, :] + 0.5 * x[2,:] + (ones(size(x, 2)) + 0.3 * sin.(2 * x[2, :])) .* u[1, :]] # true state transition function
+Q_true = [0.03 -0.004; -0.004 0.01] # true process noise variance
+mvn_v_true = MvNormal(zeros(n_x), Q_true) # true process noise distribution
+g_true = g # true measurement function
+R_true = R # true measurement noise variance
+mvn_e_true = MvNormal(zeros(n_y), R_true) # true measurement noise distribution
+
+# Input trajectory used to generate training and test data
+mvn_u_training = Normal(0, 3) # training input distribution
+u_training = rand(mvn_u_training, T) # training inputs
+u_test = 3 * sin.(2 * pi * (1 / T_test) * (Array(1:T_test) .- 1)) # test inputs
+u = reshape([u_training; u_test], 1, T_all) # training + test inputs
+
+# Generate data by forward simulation.
+x = Array{Float64}(undef, n_x, T_all + 1) # true latent state trajectory
+x[:, 1] = rand(x_init_dist, 1) # random initial state
+y = Array{Float64}(undef, n_y, T_all) # output trajectory (measured)
+for t in 1:T_all
+    x[:, t+1] = f_true(x[:, t], u[:, t]) + rand(mvn_v_true, 1)
+    y[:, t] = g_true(x[:, t], u[:, t]) + rand(mvn_e_true, 1)
+end
+
+# Split data into training and test data.
+u_training = u[:, 1:T]
+x_training = x[:, 1:T+1]
+y_training = y[:, 1:T]
+
+u_test = u[:, T+1:end]
+x_test = x[:, T+1:end]
+y_test = y[:, T+1:end]</code></pre><h2 id="Infer-model"><a class="docs-heading-anchor" href="#Infer-model">Infer model</a><a id="Infer-model-1"></a><a class="docs-heading-anchor-permalink" href="#Infer-model" title="Permalink"></a></h2><p>Run the particle Gibbs sampler to jointly estimate the model parameters and the latent state trajectory.</p><pre><code class="language-julia hljs">PG_samples = particle_Gibbs(u_training, y_training, K, K_b, k_d, N, phi, Lambda_Q, ell_Q, Q_init, V, A_init, x_init_dist, g, R)
+
+time_sampling = time() - sampling_timer</code></pre><h2 id="Define-and-solve-optimal-control-problem"><a class="docs-heading-anchor" href="#Define-and-solve-optimal-control-problem">Define and solve optimal control problem</a><a id="Define-and-solve-optimal-control-problem-1"></a><a class="docs-heading-anchor-permalink" href="#Define-and-solve-optimal-control-problem" title="Permalink"></a></h2><p>Afterward, define the optimal control problem of the form</p><p><span>$\min \sum_{t=0}^{H} \frac{1}{2}  u_t  \operatorname{diag}(R_{\mathrm{cost}}) u_t$</span></p><p>subject to:</p><p class="math-container">\[\begin{aligned}
+\forall k, \forall t \\
+x_{t+1}^{[k]} &amp;= f_{\theta^{[k]}}(x_t^{[k]}, u_t) + v_t^{[k]} \\
+x_{t, 1:n_y}^{[k]} &amp;\geq y_{\mathrm{min},\ t} - e_t^{[k]} \\
+x_{t, 1:n_y}^{[k]} &amp;\leq y_{\mathrm{max},\ t} - e_t^{[k]} \\
+u_t &amp;\geq u_{\mathrm{min},\ t} \\
+u_t &amp;\leq u_{\mathrm{max},\ t}.
+\end{aligned}\]</p><p>(Note that the output constraints imply the measurement function <span>$y_t^{[k]} = x_{t, 1:n_y}^{[k]}$</span>.)</p><pre><code class="language-julia hljs"># Horizon
+H = 41
+
+# Define constraints for u and y.
+u_max = [5] # max control input
+u_min = [-5] # min control input
+y_max = reshape(fill(Inf, H), (1, H)) # max system output
+y_min = reshape([-fill(Inf, 20); 2 * ones(6); -fill(Inf, 15)], (1, H)) # min system output
+
+R_cost_diag = [2] # diagonal of R_cost</code></pre><p>Solve the optimal control problem. In this case, no formal guarantees for the constraint satisfaction can be derived since Assumption 1 is not satisfied as the employed basis functions cannot represent the actual dynamics with arbitrary precision.</p><pre><code class="language-julia hljs">x_opt, u_opt, y_opt, J_opt, penalty_max = solve_PG_OCP(PG_samples, phi_opt, R, H, u_min, u_max, y_min, y_max, R_cost_diag; K_pre_solve=20, opts=opts)[[1, 2, 3, 4, 8]]</code></pre><p>Finally, apply the input trajectory to the actual system and plot the output trajectories.</p><pre><code class="language-julia hljs"># Apply input trajectory to the actual system.
+y_sys = Array{Float64}(undef, n_y, H)
+x_sys = Array{Float64}(undef, n_x, H)
+x_sys[:, 1] = x_training[:, end]
+u_sys = [u_opt 0]
+for t in 1:H
+    if t &gt;= 2
+        x_sys[:, t] = f_true(x_sys[:, t-1], u_sys[:, t-1]) + rand(mvn_v_true, 1)
+    end
+    y_sys[:, t] = g_true(x_sys[:, t], u_sys[:, t]) + rand(mvn_e_true, 1)
+end
+
+# Plot predictions.
+plot_predictions(y_opt, y_sys; plot_percentiles=false, y_min=y_min, y_max=y_max)</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../PG_OCP_known_basis_functions/">« Optimal control with known basis functions</a><a class="docs-footer-nextpage" href="../../list_of_functions/">List of fuctions »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.4.1 on <span class="colophon-date" title="Tuesday 21 May 2024 14:14">Tuesday 21 May 2024</span>. Using Julia version 1.10.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
