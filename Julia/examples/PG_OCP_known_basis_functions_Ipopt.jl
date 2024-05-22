@@ -218,8 +218,8 @@ end
 
 # Define cost function.
 # Objective: min ∑_{∀t} u_t^2.
-function cost_function(u) 
-    cost = sum(u.^2)
+function cost_function(u)
+    cost = sum(u .^ 2)
     return cost
 end
 

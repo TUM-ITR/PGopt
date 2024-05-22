@@ -5,16 +5,18 @@
 The approach is explained in the paper "Learning-Based Optimal Control with Performance Guarantees for Unknown Systems with Latent States", available as a preprint on [arXiv](https://arxiv.org/abs/2303.17963).
 
 ## Versions
-This document describes the Julia implementation of `PGopt`, which does not require proprietary software. The open-source solver [Altro](https://github.com/RoboticExplorationLab/Altro.jl) is used for the optimization. The results presented in the paper were generated with this version, and the software reproduces these results exactly.
+This document describes the Julia implementation of `PGopt`. In this version, the solvers [Altro](https://github.com/RoboticExplorationLab/Altro.jl) and [IPOPT](https://coin-or.github.io/Ipopt/) can be employed to solve the optimal control problem (OCP).
 
-**Please note that this version has several limitations: only cost functions of the form $J_H=\sum\nolimits_{t=0}^H \frac{1}{2} u_t R u_t$, measurement functions of the form $y=x_{1:n_y}$, and output constraints of the form $y_\mathrm{min} \leq y \leq y_\mathrm{max}$ are supported.**
+The results presented in the paper were generated with the solver Altro. Please note that this implementation has several limitations: only cost functions of the form $J_H=\sum\nolimits_{t=0}^H \frac{1}{2} u_t R u_t$, measurement functions of the form $y=x_{1:n_y}$, and output constraints of the form $y_\mathrm{min} \leq y \leq y_\mathrm{max}$ are supported.
 
-Besides the Julia implementation, there is also a MATLAB implementation, which is more general and allows arbitrary cost functions $J_H(u_{1:H},x_{1:H},y_{1:H})$, measurement functions $y=g(x,u)$, and constraints $h(u_{1:H},x_{1:H},y_{1:H})$. Further information can be found [here](https://github.com/TUM-ITR/PGopt/tree/main/MATLAB).
+The solver IPOPT is more general than Altro, and this implementation allows arbitrary cost functions $J_H(u_{1:H},x_{1:H},y_{1:H})$, measurement functions $y=g(x,u)$, and constraints $h(u_{1:H},x_{1:H},y_{1:H})$. However, using IPOPT together with the proprietary [HSL Linear Solvers for Julia](https://licences.stfc.ac.uk/product/libhsl) (`HSL_jll.jl`) is recommended. A license (free to academics) is required.
+
+Besides the Julia implementation, there is also a MATLAB implementation that utilizes [CasADi](https://web.casadi.org/) and [IPOPT](https://coin-or.github.io/Ipopt/). Further information can be found [here](https://github.com/TUM-ITR/PGopt/tree/main/MATLAB).
 
 ## Installation
 `PGopt` can be installed using the Julia package manager. Start a Pkg REPL (press `]` in a Julia REPL), and install `PGopt` via
 ```
-pkg>add https://github.com/TUM-ITR/PGopt:Julia
+pkg> add https://github.com/TUM-ITR/PGopt:Julia
 ```
 
 Alternatively, to inspect the source code more easily, download the source code from [GitHub](https://github.com/TUM-ITR/PGopt). Navigate to the folder `PGopt/Julia`, start a Pkg REPL (press `]` in a Julia REPL), and install the dependencies via
@@ -23,4 +25,4 @@ pkg>activate .
 pkg>instantiate
 ```
 
-You can then execute the scripts `autocorrelation.jl`, `PG_OCP_known_basis_functions.jl`, or `PG_generic_basis_functions.jl` in the folder `PGopt/Julia/examples`.
+You can then execute the examples in the folder `PGopt/Julia/examples`.

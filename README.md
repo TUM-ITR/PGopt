@@ -13,13 +13,15 @@ Two versions of the algorithm are currently available: a [Julia implementation](
 ## Julia
 [![Dev](https://img.shields.io/badge/docs-stable-blue?logo=Julia&logoColor=white)](https://TUM-ITR.github.io/PGopt)
 
-In order to ensure the reproducibility of the results presented in the paper without reliance on proprietary software, a Julia implementation using the [Altro](https://github.com/RoboticExplorationLab/Altro.jl) solver is provided. This version was used for the results presented in the paper and reproduces them exactly. However, this version has some limitations: only cost functions of the form $J_H=\sum\nolimits_{t=0}^H \frac{1}{2} u_t R u_t$, measurement functions of the form $y=x_{1:n_y}$, and output constraints of the form $y_\mathrm{min} \leq y \leq y_\mathrm{max}$ are supported. 
+In order to ensure the reproducibility of the results presented in the paper without reliance on proprietary software, a Julia implementation that utilizes the solver [Altro](https://github.com/RoboticExplorationLab/Altro.jl) to solve the OCP is provided. This version was used for the results presented in the paper and reproduces them exactly. However, this version has some limitations: only cost functions of the form $J_H=\sum\nolimits_{t=0}^H \frac{1}{2} u_t R u_t$, measurement functions of the form $y=x_{1:n_y}$, and output constraints of the form $y_\mathrm{min} \leq y \leq y_\mathrm{max}$ are supported. 
+
+Besides the Julia implementation that utilizes Altro, there is also an implementation that utilizes the solver [IPOPT](https://coin-or.github.io/Ipopt/). This implementation allows arbitrary cost functions $J_H(u_{1:H},x_{1:H},y_{1:H})$, measurement functions $y=g(x,u)$, and constraints $h(u_{1:H},x_{1:H},y_{1:H})$. However, using IPOPT together with the proprietary [HSL Linear Solvers for Julia](https://licences.stfc.ac.uk/product/libhsl) (`HSL_jll.jl`) is recommended. A license (free to academics) is required.
 
 Further information can be found in the [PGopt Julia documentation](Julia/README.md).
 
 ## MATLAB
 
-The MATLAB implementation is more general than the Julia implementation and allows arbitrary cost functions $J_H(u_{1:H},x_{1:H},y_{1:H})$, measurement functions $y=g(x,u)$, and constraints $h(u_{1:H},x_{1:H},y_{1:H})$. [CasADi](https://web.casadi.org/) and [IPOPT](https://coin-or.github.io/Ipopt/) are used to solve the scenario optimal control problem. In addition, the proprietary [HSL Linear Solvers](https://licences.stfc.ac.uk/product/coin-hsl) are used, which significantly accelerate the optimization. A license for the HSL Linear Solvers (free to academics) is required. 
+The MATLAB implementation allows arbitrary cost functions $J_H(u_{1:H},x_{1:H},y_{1:H})$, measurement functions $y=g(x,u)$, and constraints $h(u_{1:H},x_{1:H},y_{1:H})$. [CasADi](https://web.casadi.org/) and [IPOPT](https://coin-or.github.io/Ipopt/) are used to solve the scenario optimal control problem. In addition, the proprietary [HSL Linear Solvers](https://licences.stfc.ac.uk/product/coin-hsl) are used, which significantly accelerate the optimization. A license for the HSL Linear Solvers (free to academics) is required. 
 
 Further information can be found in the [PGopt MATLAB documentation](MATLAB/README.md).
 
@@ -27,9 +29,9 @@ Further information can be found in the [PGopt MATLAB documentation](MATLAB/READ
 If you found this software useful for your research, consider citing us.
 ```
 @article{PMCMC_OCP_arXiv_2023,
-      title={Learning-Based Optimal Control with Performance Guarantees for Unknown Systems with Latent States},
-      author={Lefringhausen, Robert and Srithasan, Supitsana and Lederer, Armin and Hirche, Sandra},
-      journal={arXiv preprint arXiv:2303.17963},
-      year={2023}
+   title={Learning-Based Optimal Control with Performance Guarantees for Unknown Systems with Latent States},
+   author={Lefringhausen, Robert and Srithasan, Supitsana and Lederer, Armin and Hirche, Sandra},
+   journal={arXiv preprint arXiv:2303.17963},
+   year={2023}
 }
 ```
