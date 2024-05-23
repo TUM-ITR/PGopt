@@ -23,8 +23,8 @@ h(&u_{0:H},x_{0:H}^{[k]},y_{0:H}^{[k]}) \\leq 0.
 - `R`: variance of zero-mean Gaussian measurement noise - only used if e_vec is not passed
 - `H`: horizon of the OCP
 - `J`: function with input arguments (``u_{1:H}``, ``x_{1:H}``, ``y_{1:H}``) (or ``u_{1:H}`` if `J_u` is set true) that returns the cost to be minimized
-- `h_scenario`: function with input arguments (``u_{1:H}``, ``x_{1:H}``, ``y_{1:H}``) that returns the constraint vector belonging to a scenario; a feasible solution must satisfy ``h_{\mathrm{scenario}} \leq 0`` for all scenarios.
-- `h_u`: function with input argument ``u_{1:H}`` that returns the constraint vector for the control inputs; a feasible solution satisfy yield ``h_u \leq 0``
+- `h_scenario`: function with input arguments (``u_{1:H}``, ``x_{1:H}``, ``y_{1:H}``) that returns the constraint vector belonging to a scenario; a feasible solution must satisfy ``h_{\\mathrm{scenario}} \\leq 0`` for all scenarios.
+- `h_u`: function with input argument ``u_{1:H}`` that returns the constraint vector for the control inputs; a feasible solution satisfy yield ``h_u \\leq 0``
 - `J_u`: set to true if cost depends only on inputs ``u_{1:H}` - this accelerates the optimization
 - `x_vec_0`: vector with K * n_x elements containing the initial state of all models - if not provided, the initial states are sampled based on the PGS samples
 - `v_vec`: array of dimension n_x x H x K that contains the process noise for all models and all timesteps - if not provided, the noise is sampled based on the PGS samples
@@ -244,8 +244,8 @@ h(&u_{0:H},x_{0:H}^{[k]},y_{0:H}^{[k]}) \\leq 0.
 - `R`: variance of zero-mean Gaussian measurement noise - only used if e_vec is not passed
 - `H`: horizon of the OCP
 - `J`: function with input arguments (``u_{1:H}``, ``x_{1:H}``, ``y_{1:H}``) (or ``u_{1:H}`` if `J_u` is set true) that returns the cost to be minimized
-- `h_scenario`: function with input arguments (``u_{1:H}``, ``x_{1:H}``, ``y_{1:H}``) that returns the constraint vector belonging to a scenario; a feasible solution must satisfy ``h_{\mathrm{scenario}} \leq 0`` for all scenarios.
-- `h_u`: function with input argument ``u_{1:H}`` that returns the constraint vector for the control inputs; a feasible solution satisfy yield ``h_u \leq 0``
+- `h_scenario`: function with input arguments (``u_{1:H}``, ``x_{1:H}``, ``y_{1:H}``) that returns the constraint vector belonging to a scenario; a feasible solution must satisfy ``h_{\\mathrm{scenario}} \\leq 0`` for all scenarios.
+- `h_u`: function with input argument ``u_{1:H}`` that returns the constraint vector for the control inputs; a feasible solution satisfy yield ``h_u \\leq 0``
 - `β`: confidence parameter
 - `J_u`: set to true if cost depends only on inputs ``u_{1:H}` - this accelerates the optimization
 - `x_vec_0`: vector with K * n_x elements containing the initial state of all models - if not provided, the initial states are sampled based on the PGS samples
