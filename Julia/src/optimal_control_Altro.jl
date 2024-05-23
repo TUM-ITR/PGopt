@@ -1,3 +1,51 @@
+"""
+    epsilon(s::Int64, K::Int64, β::Float64)
+
+Determine the parameter ``\\epsilon``. ``1-\\epsilon`` corresponds to a bound on the probability that the incurred cost exceeds the worst-case cost or that the constraints are violated when the input trajectory ``u_{0:H}`` is applied to the unknown system.
+``\\epsilon`` is the unique solution over the interval ``(0,1)`` of the polynomial equation in the ``v`` variable:
+
+``\\binom{K}{s}(1-v)^{K-s}-\\frac{\\beta}{K}\\sum_{m=s}^{K-1}\\binom{m}{s}(1-v)^{m-s}=0``.
+
+# Arguments
+- `s`: cardinality of the support sub-sample 
+- `K`: number of scenarios
+- `β`: confidence parameter
+
+This function is based on the paper
+
+    S. Garatti and M. C. Campi, “Risk and complexity in scenario optimization,” Mathematical Programming, vol. 191, no. 1, pp. 243–279, 2022.
+
+and the code provided in the appendix.
+"""
+function epsilon(s::Int64, K::Int64, β::Float64)
+    alphaU = beta_inc_inv(K - s + 1, s, β)[2]
+    m1 = Array(s:K)'
+    aux1 = sum(triu(log.(ones(K - s + 1) * m1), 1), dims=2)
+    aux2 = sum(triu(log.(ones(K - s + 1) * (m1 .- s)), 1), dims=2)
+    coeffs1 = aux2 - aux1
+    m2 = Array(K+1:4*K)'
+    aux3 = sum(tril(log.(ones(3 * K) .* m2)), dims=2)
+    aux4 = sum(tril(log.(ones(3 * K) .* (m2 .- s))), dims=2)
+    coeffs2 = aux3 - aux4
+    t1 = 0
+    t2 = 1 - alphaU
+    poly1 = 1 + β / (2 * K) - β / (2 * K) * sum(exp.(coeffs1 .- (K .- m1') * log(t1))) - β / (6 * K) * sum(exp.(coeffs2 .+ (m2' .- K) * log(t1)))
+    poly2 = 1 + β / (2 * K) - β / (2 * K) * sum(exp.(coeffs1 .- (K .- m1') * log(t2))) - β / (6 * K) * sum(exp.(coeffs2 .+ (m2' .- K) * log(t2)))
+    if !(poly1 * poly2 > 0)
+        while t2 - t1 > 1e-10
+            t = (t1 + t2) / 2
+            polyt = 1 + β / (2 * K) - β / (2 * K) * sum(exp.(coeffs1 .- (K .- m1') * log(t))) - β / (6 * K) * sum(exp.(coeffs2 .+ (m2' .- K) * log(t)))
+            if polyt > 0
+                t2 = t
+            else
+                t1 = t
+            end
+        end
+        ϵ = t1
+    end
+    return ϵ
+end
+
 # Define RobotDynamics object - see RobotDynamics.jl for explanations.
 # The PG samples are combined into a single model with state x_vec containing the K*n_x states of the individual models.
 RobotDynamics.@autodiff struct PGS_model_obj <: RobotDynamics.DiscreteDynamics
@@ -59,9 +107,9 @@ function RobotDynamics.discrete_dynamics!(PGS_model::PGS_model_obj, x_vec_n, x_v
 end
 
 """
-    solve_PG_OCP(PG_samples::Vector{PG_sample}, phi::Function, R, H, u_min, u_max, y_min, y_max, R_cost_diag; x_vec_0=nothing, v_vec=nothing, e_vec=nothing, u_init=nothing, K_pre_solve=0, active_constraints=nothing, opts=nothing, print_progress=true)
+    solve_PG_OCP_Altro(PG_samples::Vector{PG_sample}, phi::Function, R, H, u_min, u_max, y_min, y_max, R_cost_diag; x_vec_0=nothing, v_vec=nothing, e_vec=nothing, u_init=nothing, K_pre_solve=0, active_constraints=nothing, opts=nothing, print_progress=true)
 
-Solve the optimal control problem of the following form:
+Solve the optimal control problem of the following form using Altro.jl:
 
 ``\\min \\sum_{t=0}^{H} \\frac{1}{2}  u_t  \\operatorname{diag}(R_{\\mathrm{cost}}) u_t``
 
@@ -69,10 +117,10 @@ subject to:
 ```math
 \\begin{aligned}
 \\forall k, \\forall t \\\\
-x_{t+1}^{[k]} &= f_{\\theta^{[k]}}(x_t^{[k]}, u_t) + v_t^{[k]} \\\\
-x_{t, 1:n_y}^{[k]} &\\geq y_{\\mathrm{min},\\ t} - e_t^{[k]} \\\\
-x_{t, 1:n_y}^{[k]} &\\leq y_{\\mathrm{max},\\ t} - e_t^{[k]} \\\\
-u_t &\\geq u_{\\mathrm{min},\\ t} \\\\
+x_{t+1}^{[k]} &= f_{\\theta^{[k]}}(x_t^{[k]}, u_t) + v_t^{[k]}, \\\\
+x_{t, 1:n_y}^{[k]} &\\geq y_{\\mathrm{min},\\ t} - e_t^{[k]}, \\\\
+x_{t, 1:n_y}^{[k]} &\\leq y_{\\mathrm{max},\\ t} - e_t^{[k]}, \\\\
+u_t &\\geq u_{\\mathrm{min},\\ t}, \\\\
 u_t &\\leq u_{\\mathrm{max},\\ t}.
 \\end{aligned}
 ```
@@ -99,7 +147,7 @@ Further note that the states of the individual models (``x^{[1:K]}``) are combin
 - `opts`: SolverOptions struct containing options of the solver
 - `print_progress`: if set to true, the progress is printed
 """
-function solve_PG_OCP(PG_samples::Vector{PG_sample}, phi::Function, R, H, u_min, u_max, y_min, y_max, R_cost_diag; x_vec_0=nothing, v_vec=nothing, e_vec=nothing, u_init=nothing, K_pre_solve=0, active_constraints=nothing, opts=nothing, print_progress=true)
+function solve_PG_OCP_Altro(PG_samples::Vector{PG_sample}, phi::Function, R, H, u_min, u_max, y_min, y_max, R_cost_diag; x_vec_0=nothing, v_vec=nothing, e_vec=nothing, u_init=nothing, K_pre_solve=0, active_constraints=nothing, opts=nothing, print_progress=true)
     # Time optimization.
     optimization_timer = time()
 
@@ -171,7 +219,7 @@ function solve_PG_OCP(PG_samples::Vector{PG_sample}, phi::Function, R, H, u_min,
             end
 
             # Solve problem that only contains K_pre_solve randomly selected scenarios.
-            u_init, max_penalty = solve_PG_OCP(PG_samples[k_pre_solve], phi, R, H, u_min, u_max, y_min, y_max, R_cost_diag; x_vec_0=x_vec_0_pre_solve, v_vec=v_vec[:, :, k_pre_solve], e_vec=e_vec[:, :, k_pre_solve], K_pre_solve=0, opts=opts, print_progress=print_progress)[[2, 8]]
+            u_init, max_penalty = solve_PG_OCP_Altro(PG_samples[k_pre_solve], phi, R, H, u_min, u_max, y_min, y_max, R_cost_diag; x_vec_0=x_vec_0_pre_solve, v_vec=v_vec[:, :, k_pre_solve], e_vec=e_vec[:, :, k_pre_solve], K_pre_solve=0, opts=opts, print_progress=print_progress)[[1, 8]]
 
             # Increase penalty - this can further decrease the runtime but might be unstable.
             # opts.penalty_initial = 10*opts.penalty_initial
@@ -295,8 +343,8 @@ function solve_PG_OCP(PG_samples::Vector{PG_sample}, phi::Function, R, H, u_min,
     end
 
     # Extract the solution and convert to matrices - copy is used to avoid problems with the garbage collection.
-    x_opt = copy(permutedims(reshape(hcat(Vector.(states(solver))...), (n_x, K, H)), (1, 3, 2)))
     u_opt = copy(reshape(hcat(Vector.(controls(solver))...), (n_u, H - 1)))
+    x_opt = copy(permutedims(reshape(hcat(Vector.(states(solver))...), (n_x, K, H)), (1, 3, 2)))
     J_opt = copy(cost(solver))
 
     # Get the output via the measurement function y_t^k = x_t^k[1 : n_y] + e_t^k.
@@ -307,61 +355,13 @@ function solve_PG_OCP(PG_samples::Vector{PG_sample}, phi::Function, R, H, u_min,
         end
     end
 
-    return x_opt, u_opt, y_opt, J_opt, copy(Integer(status(solver))), copy(solver.stats.iterations), copy(solver.stats.iterations_outer), copy(solver.stats.penalty_max)
+    return u_opt, x_opt, y_opt, J_opt, copy(Integer(status(solver))), copy(solver.stats.iterations), copy(solver.stats.iterations_outer), copy(solver.stats.penalty_max)
 end
 
 """
-    epsilon(s::Int64, K::Int64, β::Float64)
+    solve_PG_OCP_Altro_greedy_guarantees(PG_samples::Vector{PG_sample}, phi::Function, R, H, u_min, u_max, y_min, y_max, R_cost_diag, β; x_vec_0=nothing, v_vec=nothing, e_vec=nothing, u_init=nothing, K_pre_solve=0, opts=nothing, print_progress=true)
 
-Determine the parameter ``\\epsilon``. ``1-\\epsilon`` corresponds to a bound on the probability that the incurred cost exceeds the worst-case cost or that the constraints are violated when the input trajectory ``u_{0:H}`` is applied to the unknown system.
-``\\epsilon`` is the unique solution over the interval ``(0,1)`` of the polynomial equation in the ``v`` variable:
-
-``\\binom{K}{s}(1-v)^{K-s}-\\frac{\\beta}{K}\\sum_{m=s}^{K-1}\\binom{m}{s}(1-v)^{m-s}=0``.
-
-# Arguments
-- `s`: cardinality of the support sub-sample 
-- `K`: number of scenarios
-- `β`: confidence parameter
-
-This function is based on the paper
-
-    S. Garatti and M. C. Campi, “Risk and complexity in scenario optimization,” Mathematical Programming, vol. 191, no. 1, pp. 243–279, 2022.
-
-and the code provided in the appendix.
-"""
-function epsilon(s::Int64, K::Int64, β::Float64)
-    alphaU = beta_inc_inv(K - s + 1, s, β)[2]
-    m1 = Array(s:K)'
-    aux1 = sum(triu(log.(ones(K - s + 1) * m1), 1), dims=2)
-    aux2 = sum(triu(log.(ones(K - s + 1) * (m1 .- s)), 1), dims=2)
-    coeffs1 = aux2 - aux1
-    m2 = Array(K+1:4*K)'
-    aux3 = sum(tril(log.(ones(3 * K) .* m2)), dims=2)
-    aux4 = sum(tril(log.(ones(3 * K) .* (m2 .- s))), dims=2)
-    coeffs2 = aux3 - aux4
-    t1 = 0
-    t2 = 1 - alphaU
-    poly1 = 1 + β / (2 * K) - β / (2 * K) * sum(exp.(coeffs1 .- (K .- m1') * log(t1))) - β / (6 * K) * sum(exp.(coeffs2 .+ (m2' .- K) * log(t1)))
-    poly2 = 1 + β / (2 * K) - β / (2 * K) * sum(exp.(coeffs1 .- (K .- m1') * log(t2))) - β / (6 * K) * sum(exp.(coeffs2 .+ (m2' .- K) * log(t2)))
-    if !(poly1 * poly2 > 0)
-        while t2 - t1 > 1e-10
-            t = (t1 + t2) / 2
-            polyt = 1 + β / (2 * K) - β / (2 * K) * sum(exp.(coeffs1 .- (K .- m1') * log(t))) - β / (6 * K) * sum(exp.(coeffs2 .+ (m2' .- K) * log(t)))
-            if polyt > 0
-                t2 = t
-            else
-                t1 = t
-            end
-        end
-        ϵ = t1
-    end
-    return ϵ
-end
-
-"""
-    solve_PG_OCP_greedy_guarantees(PG_samples::Vector{PG_sample}, phi::Function, R, H, u_min, u_max, y_min, y_max, R_cost_diag, β; x_vec_0=nothing, v_vec=nothing, e_vec=nothing, u_init=nothing, K_pre_solve=0, opts=nothing, print_progress=true)
-
-Solve the following optimal control problem and determine a support sub-sample with cardinality ``s`` via a greedy constraint removal. 
+Solve the following optimal control problem using Altro.jl and determine a support sub-sample with cardinality ``s`` via a greedy constraint removal. 
 Based on the cardinality ``s``, a bound on the probability that the incurred cost exceeds the worst-case cost or that the constraints are violated when the input trajectory ``u_{0:H}`` is applied to the unknown system is calculated (i.e., ``1-\\epsilon`` is determined).
 
 ``\\min \\sum_{t=0}^{H} \\frac{1}{2}  u_t  \\operatorname{diag}(R_{\\mathrm{cost}}) u_t``
@@ -370,10 +370,10 @@ subject to:
 ```math
 \\begin{aligned}
 \\forall k, \\forall t \\\\
-x_{t+1}^{[k]} &= f_{\\theta^{[k]}}(x_t^{[k]}, u_t) + v_t^{[k]} \\\\
-x_{t, 1:n_y}^{[k]} &\\geq y_{\\mathrm{min},\\ t} - e_t^{[k]} \\\\
-x_{t, 1:n_y}^{[k]} &\\leq y_{\\mathrm{max},\\ t} - e_t^{[k]} \\\\
-u_t &\\geq u_{\\mathrm{min},\\ t} \\\\
+x_{t+1}^{[k]} &= f_{\\theta^{[k]}}(x_t^{[k]}, u_t) + v_t^{[k]}, \\\\
+x_{t, 1:n_y}^{[k]} &\\geq y_{\\mathrm{min},\\ t} - e_t^{[k]}, \\\\
+x_{t, 1:n_y}^{[k]} &\\leq y_{\\mathrm{max},\\ t} - e_t^{[k]}, \\\\
+u_t &\\geq u_{\\mathrm{min},\\ t}, \\\\
 u_t &\\leq u_{\\mathrm{max},\\ t}.
 \\end{aligned}
 ```
@@ -400,7 +400,7 @@ Further note that the states of the individual models (``x^{[1:K]}``) are combin
 - `opts`: SolverOptions struct containing options of the solver
 - `print_progress`: if set to true, the progress is printed
 """
-function solve_PG_OCP_greedy_guarantees(PG_samples::Vector{PG_sample}, phi::Function, R, H, u_min, u_max, y_min, y_max, R_cost_diag, β; x_vec_0=nothing, v_vec=nothing, e_vec=nothing, u_init=nothing, K_pre_solve=0, opts=nothing, print_progress=true)
+function solve_PG_OCP_Altro_greedy_guarantees(PG_samples::Vector{PG_sample}, phi::Function, R, H, u_min, u_max, y_min, y_max, R_cost_diag, β; x_vec_0=nothing, v_vec=nothing, e_vec=nothing, u_init=nothing, K_pre_solve=0, opts=nothing, print_progress=true)
     # Time first optimization.
     first_solve_timer = time()
 
@@ -469,13 +469,13 @@ function solve_PG_OCP_greedy_guarantees(PG_samples::Vector{PG_sample}, phi::Func
     # Solve the OCP once with all constraints to get an initialization for all following optimizations.
     println("### Startet optimization of fully constrained problem")
 
-    u_init, max_penalty = solve_PG_OCP(PG_samples, phi, R, H, u_min, u_max, y_min, y_max, R_cost_diag; x_vec_0=x_vec_0, v_vec=v_vec, e_vec=e_vec, u_init=u_init, K_pre_solve=K_pre_solve, opts=opts, print_progress=print_progress)[[2, 8]]
+    u_init, max_penalty = solve_PG_OCP_Altro(PG_samples, phi, R, H, u_min, u_max, y_min, y_max, R_cost_diag; x_vec_0=x_vec_0, v_vec=v_vec, e_vec=e_vec, u_init=u_init, K_pre_solve=K_pre_solve, opts=opts, print_progress=print_progress)[[1, 8]]
 
     # The OCP is solved again with initialization to obtain the optimal input u_opt.
     opts.iterations = 1000
     opts.penalty_initial = max_penalty[end] # increase initial penalty
     println("### Startet optimization of fully constrained problem with initialization")
-    x_opt, u_opt, y_opt, J_opt, termination_status, iterations, iterations_outer = solve_PG_OCP(PG_samples, phi, R, H, u_min, u_max, y_min, y_max, R_cost_diag; x_vec_0=x_vec_0, v_vec=v_vec, e_vec=e_vec, u_init=u_init, K_pre_solve=0, opts=opts, print_progress=print_progress)[1:end-1]
+    u_opt, x_opt, y_opt, J_opt, termination_status, iterations, iterations_outer = solve_PG_OCP_Altro(PG_samples, phi, R, H, u_min, u_max, y_min, y_max, R_cost_diag; x_vec_0=x_vec_0, v_vec=v_vec, e_vec=e_vec, u_init=u_init, K_pre_solve=0, opts=opts, print_progress=print_progress)[1:end-1]
 
     # Determine guarantees.
     # If a feasible u_opt is found, probabilistic constraint satisfaction guarantees are derived by greedily removing constraints to determine a support sub-sample S.
@@ -518,7 +518,7 @@ function solve_PG_OCP_greedy_guarantees(PG_samples::Vector{PG_sample}, phi::Func
             # Catch errors that might occur during the optimization, e.g., out-of-memory errors.
             try
                 # Solve the OCP with reduced constraint set.
-                u_opt_temp, termination_status_temp = solve_PG_OCP(PG_samples, phi, R, H, u_min, u_max, y_min, y_max, R_cost_diag; x_vec_0=x_vec_0, v_vec=v_vec, e_vec=e_vec, u_init=u_init, K_pre_solve=0, active_constraints=temp_scenarios, opts=opts, print_progress=print_progress)[[2, 5]]
+                u_opt_temp, termination_status_temp = solve_PG_OCP_Altro(PG_samples, phi, R, H, u_min, u_max, y_min, y_max, R_cost_diag; x_vec_0=x_vec_0, v_vec=v_vec, e_vec=e_vec, u_init=u_init, K_pre_solve=0, active_constraints=temp_scenarios, opts=opts, print_progress=print_progress)[[1, 5]]
 
                 # If the optimization is successful and the solution does not change, permanently remove the constraints corresponding to the PG samples with index i from the constraint set.
                 if ((termination_status_temp == 2) && (maximum(abs.(u_opt_temp - u_opt)) == 0))
@@ -552,5 +552,5 @@ function solve_PG_OCP_greedy_guarantees(PG_samples::Vector{PG_sample}, phi::Func
         epsilon_perc = NaN
         time_guarantees = NaN
     end
-    return x_opt, u_opt, y_opt, J_opt, s, epsilon_prob, epsilon_perc, time_first_solve, time_guarantees, num_failed_optimizations
+    return u_opt, x_opt, y_opt, J_opt, s, epsilon_prob, epsilon_perc, time_first_solve, time_guarantees, num_failed_optimizations
 end

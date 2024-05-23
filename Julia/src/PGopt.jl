@@ -13,8 +13,11 @@ using RobotDynamics
 using ForwardDiff
 using FiniteDiff
 using SpecialFunctions
+using JuMP
+using Ipopt
 
-export PG_sample, particle_Gibbs, systematic_resampling, MNIW_sample, test_prediction, plot_predictions, plot_autocorrelation, solve_PG_OCP, solve_PG_OCP_greedy_guarantees, epsilon
+
+export PG_sample, particle_Gibbs, systematic_resampling, MNIW_sample, test_prediction, plot_predictions, plot_autocorrelation, epsilon, solve_PG_OCP_Altro, solve_PG_OCP_Altro_greedy_guarantees, solve_PG_OCP_Ipopt, solve_PG_OCP_Ipopt_greedy_guarantees
 
 # Struct for the samples of the PGS algorithm
 mutable struct PG_sample
@@ -27,4 +30,5 @@ end
 
 include("particle_Gibbs.jl")
 include("optimal_control_Altro.jl")
+include("optimal_control_Ipopt.jl")
 end

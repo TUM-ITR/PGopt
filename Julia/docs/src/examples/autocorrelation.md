@@ -6,7 +6,7 @@ This example reproduces the normalized auto-correlation function plot (Figure 1)
 
 Assuming knowledge of the basis functions, samples are drawn from the posterior distribution over model parameters and latent state trajectories using the function `particle_Gibbs()` without thinning. Afterward, the autocorrelation is plotted using the function `plot_autocorrelation()`.
 
-A Julia script that contains all the steps described here can be found in the folder `PGopt/Julia/examples`.
+A Julia script that contains all the steps described here can be found at `PGopt/Julia/examples/autocorrelation.jl`.
 
 The runtime of the script is about 10 minutes on a standard laptop.
 
