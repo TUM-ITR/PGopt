@@ -204,7 +204,7 @@ y_max = reshape(fill(Inf, H), (1, H)) # max system output
 y_min = reshape([-fill(Inf, 20); 2 * ones(6); -fill(Inf, 15)], (1, H)) # min system output
 n_output_const = sum(isfinite.(y_min)) + sum(isfinite.(y_max))
 ```
-The following functions define the input and output constraints. These functions return the constraint vectors ``h_1(u_{1:H})`` (`bounded_input()`) and ``h_2(u_{1:H},x_{1:H}^[k],y_{1:H}^[k])`` (`bounded_output()`). Feasible solutions must satisfy ``h_1(u_{1:H}) \leq 0`` and ``h_2(u_{1:H},x_{1:H}^[k],y_{1:H}^[k]) \leq 0 \; \forall k``. The functions should be callable with arrays of type `VariableRef` and `<:Number`.
+The following functions define the input and output constraints. The function `bounded_input()` returns the constraint vector ``h_1(u_{1:H})`` and the function `bounded_output()` returns the constraint vector ``h_2(u_{1:H},x_{1:H}^{[k]},y_{1:H}^{[k]})``. Feasible solutions must satisfy ``h_1(u_{1:H}) \leq 0`` and ``h_2(u_{1:H},x_{1:H}^{[k]},y_{1:H}^{[k]}) \leq 0 \; \forall k``. The functions should be callable with arrays of type `VariableRef` and `<:Number`.
 ```julia
 function bounded_input(u::Array{VariableRef})
   # Initialize constraint vector.

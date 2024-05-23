@@ -8,11 +8,11 @@ Solve the optimal control problem of the following form using Ipopt:
 subject to: 
 ```math
 \\begin{aligned}
-\\forall k, \\forall t \\\\
+\\forall k, &\\forall t \\\\
 x_{t+1}^{[k]} &= f_{\\theta^{[k]}}(x_t^{[k]}, u_t) + v_t^{[k]}, \\\\
 y_{t}^{[k]} &= g_{\\theta^{[k]}}(x_t^{[k]}, u_t) + w_t^{[k]}, \\\\
 J_H^{[k]} &= J_H(u_{0:H}, x_{0:H}^{[k]}, y_{0:H}^{[k]}) \\leq \\overline{J_H}, \\\\
-h(u_{0:H},x_{0:H}^{[k]},y_{0:H}^{[k]}) \\leq 0.
+h(&u_{0:H},x_{0:H}^{[k]},y_{0:H}^{[k]}) \\leq 0.
 \\end{aligned}
 ```
 
@@ -22,15 +22,15 @@ h(u_{0:H},x_{0:H}^{[k]},y_{0:H}^{[k]}) \\leq 0.
 - `g`: observation function
 - `R`: variance of zero-mean Gaussian measurement noise - only used if e_vec is not passed
 - `H`: horizon of the OCP
-- `J`: function with input arguments (u_1:H, x_1:H, y_1:H) (or (u_1:H) if J_u is set true) that returns the cost to be minimized
-- `h_scenario`: function with input arguments (u_1:H, x_1:H, y_1:H) that returns the constraint vector belonging to a scenario; a feasible solution must satisfy h_scenario <= 0 for all scenarios.
-- `h_u`: function with input argument u_1:H that returns the constraint vector for u; a feasible solution satisfy yield h_u <= 0
-- `J_u`: set to true if cost depends only on inputs u - this accelerates the optimization
-- `x_vec_0`: vector with K*n_x elements containing the initial state of all models - if not provided, the initial states are sampled based on the PGS samples
+- `J`: function with input arguments (``u_{1:H}``, ``x_{1:H}``, ``y_{1:H}``) (or ``u_{1:H}`` if `J_u` is set true) that returns the cost to be minimized
+- `h_scenario`: function with input arguments (``u_{1:H}``, ``x_{1:H}``, ``y_{1:H}``) that returns the constraint vector belonging to a scenario; a feasible solution must satisfy ``h_{\mathrm{scenario}} \leq 0`` for all scenarios.
+- `h_u`: function with input argument ``u_{1:H}`` that returns the constraint vector for the control inputs; a feasible solution satisfy yield ``h_u \leq 0``
+- `J_u`: set to true if cost depends only on inputs ``u_{1:H}` - this accelerates the optimization
+- `x_vec_0`: vector with K * n_x elements containing the initial state of all models - if not provided, the initial states are sampled based on the PGS samples
 - `v_vec`: array of dimension n_x x H x K that contains the process noise for all models and all timesteps - if not provided, the noise is sampled based on the PGS samples
-- `e_vec`: array of dimension n_y x H x K that contains the measurement noise for all models and all timesteps - if not provided, the noise is sampled based on the provided R
+- `e_vec`: array of dimension n_y x H x K that contains the measurement noise for all models and all timesteps - if not provided, the noise is sampled based on the provided `R`
 - `u_init`: initial guess for the optimal trajectory
-- `K_pre_solve`: if K_pre_solve > 0, an initial guess for the optimal trajectory is obtained by solving the OCP with only K_pre_solve < K models
+- `K_pre_solve`: if `K_pre_solve > 0`, an initial guess for the optimal trajectory is obtained by solving the OCP with only `K_pre_solve < K` models
 - `opts`: SolverOptions struct containing options of the solver
 - `print_progress`: if set to true, the progress is printed
 """
@@ -229,11 +229,11 @@ Based on the cardinality s, a bound on the probability that the incurred cost ex
 subject to: 
 ```math
 \\begin{aligned}
-\\forall k, \\forall t \\\\
+\\forall k, &\\forall t \\\\
 x_{t+1}^{[k]} &= f_{\\theta^{[k]}}(x_t^{[k]}, u_t) + v_t^{[k]}, \\\\
 y_{t}^{[k]} &= g_{\\theta^{[k]}}(x_t^{[k]}, u_t) + w_t^{[k]}, \\\\
 J_H^{[k]} &= J_H(u_{0:H}, x_{0:H}^{[k]}, y_{0:H}^{[k]}) \\leq \\overline{J_H}, \\\\
-h(u_{0:H},x_{0:H}^{[k]},y_{0:H}^{[k]}) \\leq 0.
+h(&u_{0:H},x_{0:H}^{[k]},y_{0:H}^{[k]}) \\leq 0.
 \\end{aligned}
 ```
 
@@ -243,16 +243,16 @@ h(u_{0:H},x_{0:H}^{[k]},y_{0:H}^{[k]}) \\leq 0.
 - `g`: observation function
 - `R`: variance of zero-mean Gaussian measurement noise - only used if e_vec is not passed
 - `H`: horizon of the OCP
-- `J`: function with input arguments (u_1:H, x_1:H, y_1:H) (or (u_1:H) if J_u is set true) that returns the cost to be minimized
-- `h_scenario`: function with input arguments (u_1:H, x_1:H, y_1:H) that returns the constraint vector belonging to a scenario; a feasible solution must satisfy h_scenario <= 0 for all scenarios.
-- `h_u`: function with input argument u_1:H that returns the constraint vector for u; a feasible solution satisfy yield h_u <= 0
+- `J`: function with input arguments (``u_{1:H}``, ``x_{1:H}``, ``y_{1:H}``) (or ``u_{1:H}`` if `J_u` is set true) that returns the cost to be minimized
+- `h_scenario`: function with input arguments (``u_{1:H}``, ``x_{1:H}``, ``y_{1:H}``) that returns the constraint vector belonging to a scenario; a feasible solution must satisfy ``h_{\mathrm{scenario}} \leq 0`` for all scenarios.
+- `h_u`: function with input argument ``u_{1:H}`` that returns the constraint vector for the control inputs; a feasible solution satisfy yield ``h_u \leq 0``
 - `β`: confidence parameter
-- `J_u`: set to true if cost depends only on inputs u - this accelerates the optimization
-- `x_vec_0`: vector with K*n_x elements containing the initial state of all models - if not provided, the initial states are sampled based on the PGS samples
+- `J_u`: set to true if cost depends only on inputs ``u_{1:H}` - this accelerates the optimization
+- `x_vec_0`: vector with K * n_x elements containing the initial state of all models - if not provided, the initial states are sampled based on the PGS samples
 - `v_vec`: array of dimension n_x x H x K that contains the process noise for all models and all timesteps - if not provided, the noise is sampled based on the PGS samples
-- `e_vec`: array of dimension n_y x H x K that contains the measurement noise for all models and all timesteps - if not provided, the noise is sampled based on the provided R
+- `e_vec`: array of dimension n_y x H x K that contains the measurement noise for all models and all timesteps - if not provided, the noise is sampled based on the provided `R`
 - `u_init`: initial guess for the optimal trajectory
-- `K_pre_solve`: if K_pre_solve > 0, an initial guess for the optimal trajectory is obtained by solving the OCP with only K_pre_solve < K models
+- `K_pre_solve`: if `K_pre_solve > 0`, an initial guess for the optimal trajectory is obtained by solving the OCP with only `K_pre_solve < K` models
 - `opts`: SolverOptions struct containing options of the solver
 - `print_progress`: if set to true, the progress is printed
 """
