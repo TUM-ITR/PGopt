@@ -1,7 +1,7 @@
 name = "PGopt"
 uuid = "053a3064-8f32-4494-8188-2599f05c5527"
 authors = ["Robert Lefringhausen <robert.lefringhausen@tum.de>"]
-version = "0.1.0"
+version = "0.2.0"
 
 [deps]
 Altro = "5dcf52e5-e2fb-48e0-b826-96f46d2e3e73"
