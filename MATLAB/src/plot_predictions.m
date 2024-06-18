@@ -66,7 +66,7 @@ for i = 1:n_y
         fill([t_pred(non_inf_idx), flip(t_pred(non_inf_idx))], [y_min(non_inf_idx), flip(min(min(y_pred_min, y_test))*ones(1, sum(non_inf_idx)))], 'r', 'linestyle', 'none', 'FaceAlpha', 0.35, 'DisplayName', 'constraints');
     end
     if ~isempty(y_max)
-        non_inf_idx = ~isinf(y_min);
+        non_inf_idx = ~isinf(y_max);
         fill([t_pred(non_inf_idx), flip(t_pred(non_inf_idx))], [y_max(non_inf_idx), flip(max(max(y_pred_max, y_test))*ones(1, sum(non_inf_idx)))], 'r', 'linestyle', 'none', 'FaceAlpha', 0.35, 'DisplayName', 'constraints');
     end
 
