@@ -6,7 +6,7 @@
 
 `PGopt` is a software for determining optimal input trajectories with probabilistic performance and constraint satisfaction guarantees for unknown systems with latent states based on input-output measurements. In order to quantify uncertainties, which is crucial for deriving formal guarantees, a Bayesian approach is employed and a prior over the unknown dynamics and the system trajectory is formulated in state-space representation. Since for practical applicability, the prior must be updated based on input-output measurements, but the corresponding posterior distribution is analytically intractable, particle Gibbs (PG) sampling is utilized to draw samples from this distribution. Based on these samples, a scenario optimal control problem (OCP) is formulated and probabilistic performance and constraint satisfaction guarantees are inferred via a greedy constraint removal.
 
-The approach is explained in the paper "Learning-Based Optimal Control with Performance Guarantees for Unknown Systems with Latent States", available as a preprint on [arXiv](https://arxiv.org/abs/2303.17963).
+The approach is explained in the paper "Learning-Based Optimal Control with Performance Guarantees for Unknown Systems with Latent States", available on [IEEExplore](https://doi.org/10.23919/ECC64448.2024.10590972) and as a preprint on [arXiv](https://arxiv.org/abs/2303.17963).
 
 Two versions of the algorithm are currently available: a [Julia implementation](Julia) and a [MATLAB implementation](MATLAB).
 
@@ -28,10 +28,12 @@ Further information can be found in the [PGopt MATLAB documentation](MATLAB/READ
 ## Reference
 If you found this software useful for your research, consider citing us.
 ```
-@article{PMCMC_OCP_arXiv_2023,
-   title={Learning-Based Optimal Control with Performance Guarantees for Unknown Systems with Latent States},
-   author={Lefringhausen, Robert and Srithasan, Supitsana and Lederer, Armin and Hirche, Sandra},
-   journal={arXiv preprint arXiv:2303.17963},
-   year={2023}
+@inproceedings{lefringhausen2024,
+  title={Learning-Based Optimal Control with Performance Guarantees for Unknown Systems with Latent States},
+  author={Lefringhausen, Robert and Srithasan, Supitsana and Lederer, Armin and Hirche, Sandra},
+  booktitle={2024 European Control Conference (ECC)},
+  pages={90--97},
+  year={2024},
+  organization={IEEE}
 }
 ```

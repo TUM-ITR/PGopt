@@ -1,5 +1,5 @@
 % This code produces results for the optimal control approach with known basis functions similar to the ones given in Section V-B (Fig. 2) of the paper
-% "Learning-Based Optimal Control with Performance Guarantees for Unknown Systems with Latent States", available as pre-print on arXiv: https://arxiv.org/abs/2303.17963.
+% "Learning-Based Optimal Control with Performance Guarantees for Unknown Systems with Latent States", available on IEEExplore: https://doi.org/10.23919/ECC64448.2024.10590972.
 % Since the Julia implementation was used for the results in the paper, the results are not exactly reproduced due to different random numbers.
 
 % Clear

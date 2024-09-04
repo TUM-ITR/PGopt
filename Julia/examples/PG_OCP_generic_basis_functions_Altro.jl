@@ -1,5 +1,5 @@
 # This code reproduces the results of the optimal control approach with generic basis functions given in Section V-C of the paper 
-# "Learning-Based Optimal Control with Performance Guarantees for Unknown Systems with Latent States", available as pre-print on arXiv: https://arxiv.org/abs/2303.17963.
+# "Learning-Based Optimal Control with Performance Guarantees for Unknown Systems with Latent States", available on IEEExplore: https://doi.org/10.23919/ECC64448.2024.10590972.
 # This script reproduces Figure 3. For the results given in Table IV, this script is repeated with seeds 1:100.
 # Please note that the results depend heavily on random numbers and that changing the order of the generated random numbers (e.g., by executing commented-out code parts) changes the results.
 

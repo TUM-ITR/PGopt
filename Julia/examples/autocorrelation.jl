@@ -1,5 +1,5 @@
 # This code reproduces the normalized auto-correlation function plot given in Section V-B (Fig. 1) of the paper 
-# "Learning-Based Optimal Control with Performance Guarantees for Unknown Systems with Latent States", available as pre-print on arXiv: https://arxiv.org/abs/2303.17963.
+# "Learning-Based Optimal Control with Performance Guarantees for Unknown Systems with Latent States", available on IEEExplore: https://doi.org/10.23919/ECC64448.2024.10590972.
 
 using PGopt
 using LinearAlgebra
