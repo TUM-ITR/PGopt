@@ -31,12 +31,13 @@ preferred-citation:
     given-names: "Sandra"
     orcid: "https://orcid.org/0000-0001-7819-5926"
   title: "Learning-Based Optimal Control with Performance Guarantees for Unknown Systems with Latent States"
+  doi: "10.23919/ECC64448.2024.10590972"
   year: 2024
   collection-title: "2024 European Control Conference (ECC)"
-  pages: 90-97
   conference:
-    - name: 2024 European Control Conference
-      location: Stockholm
+    - name: "2024 European Control Conference"
+      location: "Stockholm"
       date-start: 2024-06-25
       date-end: 2024-06-28
-  doi: 10.23919/ECC64448.2024.10590972
+  start: 90
+  end: 97
