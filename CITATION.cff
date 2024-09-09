@@ -1,0 +1,42 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Lefringhausen"
+  given-names: "Robert"
+  orcid: "https://orcid.org/0009-0008-2012-1703"
+- family-names: "Srithasan"
+  given-names: "Supitsana"
+- family-names: "Lederer"
+  given-names: "Armin"
+  orcid: "https://orcid.org/0000-0001-6263-5608"
+- family-names: "Hirche"
+  given-names: "Sandra"
+  orcid: "https://orcid.org/0000-0001-7819-5926"
+title: "PGopt"
+version: 0.2.0
+date-released: 2024-05-23
+url: "https://github.com/TUM-ITR/PGopt"
+preferred-citation:
+  type: conference-paper
+  authors:
+  - family-names: "Lefringhausen"
+    given-names: "Robert"
+    orcid: "https://orcid.org/0009-0008-2012-1703"
+  - family-names: "Srithasan"
+    given-names: "Supitsana"
+  - family-names: "Lederer"
+    given-names: "Armin"
+    orcid: "https://orcid.org/0000-0001-6263-5608"
+  - family-names: "Hirche"
+    given-names: "Sandra"
+    orcid: "https://orcid.org/0000-0001-7819-5926"
+  title: "Learning-Based Optimal Control with Performance Guarantees for Unknown Systems with Latent States"
+  year: 2024
+  collection-title: "2024 European Control Conference (ECC)"
+  pages: 90-97
+  conference:
+    - name: 2024 European Control Conference
+      location: Stockholm
+      date-start: 2024-06-25
+      date-end: 2024-06-28
+  doi: 10.23919/ECC64448.2024.10590972
