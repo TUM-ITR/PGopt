@@ -13,7 +13,8 @@ authors:
   given-names: "Sandra"
   orcid: "https://orcid.org/0000-0001-7819-5926"
 title: "PGopt"
-version: 0.2.0
+version: 0.2.1
+doi: 10.5281/zenodo.13737628
 date-released: 2024-05-23
 url: "https://github.com/TUM-ITR/PGopt"
 preferred-citation:
