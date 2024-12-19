@@ -1,7 +1,6 @@
 # This code reproduces the results of the optimal control approach with generic basis functions given in Section V-C of the paper 
 # "Learning-Based Optimal Control with Performance Guarantees for Unknown Systems with Latent States", available on IEEExplore: https://doi.org/10.23919/ECC64448.2024.10590972.
 # This script reproduces Figure 3. For the results given in Table IV, this script is repeated with seeds 1:100.
-# Please note that the results depend heavily on random numbers and that changing the order of the generated random numbers (e.g., by executing commented-out code parts) changes the results.
 
 using PGopt
 using LinearAlgebra
@@ -43,8 +42,10 @@ L = zeros(1, 1, n_z) # array containing the interval lengths
 L[1, 1, :] = [L_u L_x]
 
 # Hyperparameters of the squared exponential kernel
-l = [2] # length scale
-sf = 100 # scale factor
+#   k(z_1, z_2) = sf * exp(-0.5*(z_1 - z_2)'*inv(Lambda)*(z_1 - z_2)),
+# with Lambda = Diagonal(l^2).
+l = 2 * pi * ones(n_z) # length scale
+sf = 100^2 / (8 * pi^4) # scale factor
 
 # Initialize.
 j_vec = zeros(n_phi, 1, n_z) # contains all possible vectors j; j_vec[i, 1, :] corresponds to the vector j in eq. (5) for basis function i
@@ -82,33 +83,6 @@ j_vec = reverse(j_vec, dims=3)
 
 # Define basis functions phi.
 # This function evaluates Φ_{1 : n_x+n_u} according to eq. (5).
-# There are two implementations of the phi function: 
-#
-# The first exactly reproduces the results given in the paper.
-#
-# After the paper's publication, a much more efficient implementation was found, which, for numerical reasons, produces slightly different results (differences in the range 10^-16 when called once). 
-# However, these minimal deviations lead to noticeably different results since the function phi is called recursively T * N * K_total times (= very often). 
-# This version is currently commented-out to ensure the reproducibility of the results provided in the paper.
-# However, if you do not intend to reproduce the results of the paper, the currently commented-out version of the phi function should be used.
-
-# This is the original implementation, which is slow but exactly reproduces the results given in the paper.
-function phi_sampling(x, u)
-    # Initialize.
-    z = vcat(u, x) # augmented state
-    phi = Array{Float64}(undef, n_phi, size(z, 2))
-
-    Threads.@threads for i in axes(z, 2)
-        phi_temp = ones(n_phi)
-        for k in axes(z, 1)
-            phi_temp .= phi_temp .* ((1 ./ (sqrt.(L[:, :, k]))) .* sin.((pi .* j_vec[:, :, k] .* (z[k, i] .+ L[:, :, k])) ./ (2 .* L[:, :, k])))
-        end
-        phi[:, i] .= phi_temp
-    end
-    return phi
-end
-
-# This is the improved implementation, which is significantly faster but yields slightly different results.
-#=
 # Precompute.
 L_sqrt_inv = 1 ./ sqrt.(L)
 pi_j_over_2L = pi .* j_vec ./ (2 .* L)
@@ -123,19 +97,22 @@ function phi_sampling(x, u)
 
     return phi
 end
-=#
 
 # Prior for Q - inverse Wishart distribution
 ell_Q = 10 # degrees of freedom
 Lambda_Q = 100 * I(n_x) # scale matrix
 
 # Prior for A - matrix normal distribution (mean matrix = 0, right covariance matrix = Q (see above), left covariance matrix = V)
-# V is derived from the GP approximation according to eq. (8b), (11a), and (9).
-V_diagonal = Array{Float64}(undef, size(lambda, 1)) # diagonal of V
+# V is derived from the GP approximation according to eq. (8b), (9).
+# The spectral density of the anisotropic squared exponential kernel is
+#   S(omega) = sf * (2 * pi)^(n_z / 2) * det(Lambda)^0.5 * exp(-0.5*transpose(omega)*Lambda*omega),
+# with Lambda = Diagonal(l^2); see eq. (68) in
+#    A. Solin and S. Särkkä, "Hilbert space methods for reduced-rank Gaussian process regression," Statistics and Computing, vol. 30, no. 2, pp. 419–446, 2020.
+V_diag = Array{Float64}(undef, size(lambda, 1)) # diagonal of V
 for i in axes(lambda, 1)
-    V_diagonal[i] = sf^2 * sqrt(opnorm(2 * pi * Diagonal(repeat(l, trunc(Int, n_z / size(l, 1))) .^ 2))) * exp.(-(pi^2 * transpose(sqrt.(lambda[i, :])) * Diagonal(repeat(l, trunc(Int, n_z / size(l, 1))) .^ 2) * sqrt.(lambda[i, :])) / 2)
+    V_diag[i] = sf * ((2 * pi)^(n_z / 2)) * prod(l) * exp(-0.5 * sum((l .^ 2) .* lambda[i, :]))
 end
-V = Diagonal(V_diagonal)
+V = Diagonal(V_diag)
 
 # Initial guess for model parameters
 Q_init = Lambda_Q # initial Q
@@ -194,12 +171,6 @@ u_test = u[:, T+1:end]
 x_test = x[:, T+1:end]
 y_test = y[:, T+1:end]
 
-# Plot data.
-# plot(Array(1:T_all), u[1,:], label="input", lw=2, legend=:topright);
-# plot!(Array(1:T_all), y[1,:], label="output", lw=2);
-# xlabel!("t");
-# ylabel!("u | y");
-
 # Learn models.
 # Result: K models of the type
 # x_t+1 = PG_samples[i].A*phi(x_t, u_t) + N(0, PG_samples[i].Q),
@@ -209,7 +180,7 @@ PG_samples = particle_Gibbs(u_training, y_training, K, K_b, k_d, N, phi_sampling
 time_sampling = time() - sampling_timer
 
 # Test the models with the test data by simulating it forward in time.
-# test_prediction(PG_samples, phi, g, R, 10, u_test, y_test)
+# test_prediction(PG_samples, phi_sampling, g, R, 10, u_test, y_test)
 
 # Plot autocorrelation.
 # plot_autocorrelation(PG_samples; max_lag=K-1)

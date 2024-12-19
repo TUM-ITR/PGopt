@@ -45,11 +45,13 @@ L = zeros(1, 1, n_z); % array containing the interval lengths
 L(:) = [L_u, L_x];
 
 % Hyperparameters of the squared exponential kernel
-l = 2; % length scale
-sf = 100; % scale factor
+%   k(z_1, z_2) = sf * exp(-0.5*(z_1 - z_2)'*inv(Lambda)*(z_1 - z_2)),
+% with Lambda = diag(l^2).
+l = 2 * pi * ones(1, n_z); % length scale
+sf = 100^2 / (8 * pi^4); % scale factor
 
 % Initialize.
-j_vec = zeros(n_phi, 1, n_z); %contains all possible vectors j; j_vec(i, 1, :) corresponds to the vector j in eq. (5) for basis function i
+j_vec = zeros(n_phi, 1, n_z); % contains all possible vectors j; j_vec(i, 1, :) corresponds to the vector j in eq. (5) for basis function i
 lambda = zeros(n_phi, n_z); % lambda(i, :) corresponds to the vector lambda in eq. (9) (right-hand side) for basis function i
 
 % In the following, all possible vectors j are constructed (i.e., j_vec). The possible combinations correspond to the Cartesian product [1 : n_basis(1)] x ... x [1 : n_basis(end)].
@@ -91,10 +93,14 @@ ell_Q = 10; % degrees of freedom
 Lambda_Q = 100 * eye(n_x); % scale matrix
 
 % Prior for A - matrix normal distribution (mean matrix = 0, right covariance matrix = Q (see above), left covariance matrix = V)
-% V is derived from the GP approximation according to eq. (8b), (11a), and (9).
+% V is derived from the GP approximation according to eq. (8b), (9).
+% The spectral density of the anisotropic squared exponential kernel is
+%   S(omega) = sf * (2 * pi)^(n_z / 2) * det(Lambda)^0.5 * exp(-0.5*omega'*Lambda*omega),
+% with Lambda = diag(l^2); see eq. (68) in
+%    A. Solin and S. Särkkä, "Hilbert space methods for reduced-rank Gaussian process regression," Statistics and Computing, vol. 30, no. 2, pp. 419–446, 2020.
 V_diag = zeros(length(lambda), 1); % diagonal of V
 for i = 1:length(lambda)
-    V_diag(i) = sf^2 * sqrt(norm(2*pi*diag(l.^2))) * exp(-(pi^2 * sqrt(lambda(i, :)) * diag(l.^2) * sqrt(lambda(i, :)'))/2);
+    V_diag(i) = sf * ((2 * pi)^(n_z / 2)) * prod(l) * exp(-0.5*sum((l.^2).*lambda(i, :)));
 end
 V = diag(V_diag);
 

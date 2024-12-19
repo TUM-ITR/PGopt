@@ -44,8 +44,10 @@ L = zeros(1, 1, n_z) # array containing the interval lengths
 L[1, 1, :] = [L_u L_x]
 
 # Hyperparameters of the squared exponential kernel
-l = [2] # length scale
-sf = 100 # scale factor
+#   k(z_1, z_2) = sf * exp(-0.5*(z_1 - z_2)'*inv(Lambda)*(z_1 - z_2)),
+# with Lambda = Diagonal(l^2).
+l = 2 * pi * ones(n_z) # length scale
+sf = 100^2 / (8 * pi^4) # scale factor
 
 # Initialize.
 j_vec = zeros(n_phi, 1, n_z) # contains all possible vectors j; j_vec[i, 1, :] corresponds to the vector j in eq. (5) for basis function i
@@ -103,12 +105,16 @@ ell_Q = 10 # degrees of freedom
 Lambda_Q = 100 * I(n_x) # scale matrix
 
 # Prior for A - matrix normal distribution (mean matrix = 0, right covariance matrix = Q (see above), left covariance matrix = V)
-# V is derived from the GP approximation according to eq. (8b), (11a), and (9).
-V_diagonal = Array{Float64}(undef, size(lambda, 1)) # diagonal of V
+# V is derived from the GP approximation according to eq. (8b), (9).
+# The spectral density of the anisotropic squared exponential kernel is
+#   S(omega) = sf * (2 * pi)^(n_z / 2) * det(Lambda)^0.5 * exp(-0.5*transpose(omega)*Lambda*omega),
+# with Lambda = Diagonal(l^2); see eq. (68) in
+#    A. Solin and S. Särkkä, "Hilbert space methods for reduced-rank Gaussian process regression," Statistics and Computing, vol. 30, no. 2, pp. 419–446, 2020.
+V_diag = Array{Float64}(undef, size(lambda, 1)) # diagonal of V
 for i in axes(lambda, 1)
-    V_diagonal[i] = sf^2 * sqrt(opnorm(2 * pi * Diagonal(repeat(l, trunc(Int, n_z / size(l, 1))) .^ 2))) * exp.(-(pi^2 * transpose(sqrt.(lambda[i, :])) * Diagonal(repeat(l, trunc(Int, n_z / size(l, 1))) .^ 2) * sqrt.(lambda[i, :])) / 2)
+    V_diag[i] = sf * ((2 * pi)^(n_z / 2)) * prod(l) * exp(-0.5 * sum((l .^ 2) .* lambda[i, :]))
 end
-V = Diagonal(V_diagonal)
+V = Diagonal(V_diag)
 
 # Initial guess for model parameters
 Q_init = Lambda_Q # initial Q
@@ -167,12 +173,6 @@ u_test = u[:, T+1:end]
 x_test = x[:, T+1:end]
 y_test = y[:, T+1:end]
 
-# Plot data.
-# plot(Array(1:T_all), u[1,:], label="input", lw=2, legend=:topright);
-# plot!(Array(1:T_all), y[1,:], label="output", lw=2);
-# xlabel!("t");
-# ylabel!("u | y");
-
 # Learn models.
 # Result: K models of the type
 # x_t+1 = PG_samples[i].A*phi(x_t, u_t) + N(0, PG_samples[i].Q),
@@ -182,7 +182,7 @@ PG_samples = particle_Gibbs(u_training, y_training, K, K_b, k_d, N, phi_sampling
 time_sampling = time() - sampling_timer
 
 # Test the models with the test data by simulating it forward in time.
-# test_prediction(PG_samples, phi, g, R, 10, u_test, y_test)
+# test_prediction(PG_samples, phi_sampling, g, R, 10, u_test, y_test)
 
 # Plot autocorrelation.
 # plot_autocorrelation(PG_samples; max_lag=K-1)
@@ -292,6 +292,23 @@ function cost_function(u)
     return cost
 end
 
+# Redefine phi - the optimization cannot deal with multithreading or in-place computations.
+# This function evaluates Φ_{1 : n_x+n_u} according to eq. (5).
+function phi_opt(x, u)
+    # Initialize.
+    z = vcat(u, x) # augmented state
+    phi = Array{Any}(undef, n_phi, size(z, 2))
+
+    for i in axes(z, 2)
+        phi_temp = ones(n_phi)
+        for k in axes(z, 1)
+            phi_temp = phi_temp .* ((1 ./ (sqrt.(L[:, :, k]))) .* sin.((pi .* j_vec[:, :, k] .* (z[k, i] .+ L[:, :, k])) ./ (2 .* L[:, :, k])))
+        end
+        phi[:, i] = phi_temp
+    end
+    return phi
+end
+
 # Ipopt options
 Ipopt_options = Dict("max_iter" => 10000, "tol" => 1e-8, "hsllib" => HSL_jll.libhsl_path, "linear_solver" => "ma57")
 
@@ -299,7 +316,7 @@ Ipopt_options = Dict("max_iter" => 10000, "tol" => 1e-8, "hsllib" => HSL_jll.lib
 β = 0.01
 
 # Solve the PG OCP.
-u_opt, x_opt, y_opt, J_opt, solve_successful, iterations, mu = solve_PG_OCP_Ipopt(PG_samples, phi, g, R, H, cost_function, bounded_output, bounded_input; J_u=true, K_pre_solve=20, solver_opts=Ipopt_options)
+u_opt, x_opt, y_opt, J_opt, solve_successful, iterations, mu = solve_PG_OCP_Ipopt(PG_samples, phi_opt, g, R, H, cost_function, bounded_output, bounded_input; J_u=true, K_pre_solve=20, solver_opts=Ipopt_options)
 
 # Apply input trajectory to the actual system.
 y_sys = Array{Float64}(undef, n_y, H)

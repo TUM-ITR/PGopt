@@ -54,20 +54,20 @@ For the results in Table II of the paper, this script is repeated with seeds 1:1
 This script is similar to `PG_OCP_known_basis_functions_Altro.jl`, but the solver IPOPT is used instead of Altro. Due to the different solver, the results differ slightly from the ones presented in the paper.
 
 ### PG_OCP_generic_basis_functions_Altro.jl
-This script reproduces the results of the optimal control approach with generic basis functions (Figure 3) given in Section V-C of the paper.
+This script reproduces the results of the optimal control approach with generic basis functions (Figure 3) given in Section V-C of the paper. Due to small adjustments to the code (see Erratum in the [general README](../README.md)) and resulting numerical differences, the results from **v0.2.2** and later differ slightly from those presented in the paper. If you wish to reproduce the exact results from the paper, you can pull an earlier release of the code before version **v0.2.2**.
 
 <p align = "left">
  <img src="figures/PG_OCP_generic_basis_functions.svg" alt="PG_OCP_generic_basis_functions" style="width:80%;"/>
 </p>
 
-The method presented in the paper ["A flexible state–space model for learning nonlinear dynamical systems"](https://doi.org/10.1016/j.automatica.2017.02.030) is utilized to systematically derive basis functions and priors for the parameters based on a reduced-rank GP approximation. Afterward, by calling the function `particle_Gibbs()`, samples are drawn from the posterior distribution using particle Gibbs sampling. These samples are then passed to the function `solve_PG_OCP_Altro()`, which solves the scenario OCP using Altro.
+In this example, the method presented in the paper ["A flexible state–space model for learning nonlinear dynamical systems"](https://doi.org/10.1016/j.automatica.2017.02.030) is utilized to systematically derive basis functions and priors for the parameters based on a reduced-rank GP approximation. Afterward, by calling the function `particle_Gibbs()`, samples are drawn from the posterior distribution using particle Gibbs sampling. These samples are then passed to the function `solve_PG_OCP_Altro()`, which solves the scenario OCP using Altro.
 
-The runtime of the script is about 2 hours on a standard laptop. Using an improved phi function can reduce the runtime to about 50 minutes, but the results change slightly due to numerical reasons. Further explanations can be found in the source code.
+The runtime of the script is about 1 hour on a standard laptop.
 
 For the results in Table IV of the paper, this script is repeated with seeds 1:100.
 
 ### PG_OCP_generic_basis_functions_Ipopt.jl
-This script is similar to `PG_OCP_generic_basis_functions_Altro.jl`, but the solver IPOPT is used instead of Altro. Due to the different solver, the results differ slightly from the ones presented in the paper.
+This script is similar to `PG_OCP_generic_basis_functions_Altro.jl`, but the solver IPOPT is used instead of Altro.
 
 ## List of source code files
 The following files in the folder [src](src) contain the PGopt source code.

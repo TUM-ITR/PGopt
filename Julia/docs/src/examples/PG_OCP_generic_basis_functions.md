@@ -1,12 +1,12 @@
 # Optimal control with generic basis functions
 
-This example reproduces the results of the optimal control approach with generic basis functions (Figure 3) given in Section V-C of the [paper](../reference.md).
+This example reproduces the results of the optimal control approach with generic basis functions (Figure 3) given in Section V-C of the [paper](../reference.md). Due to small adjustments to the code (see Erratum in the [Introduction](../index.md)) and resulting numerical differences, the results from **v0.2.2** and later differ slightly from those presented in the paper. If you wish to reproduce the exact results from the paper, you can pull an earlier release of the code before version **v0.2.2**.
 
 ![autocorrelation](../assets/PG_OCP_generic_basis_functions.svg)
 
 The method presented in the paper ["A flexible state–space model for learning nonlinear dynamical systems"](https://doi.org/10.1016/j.automatica.2017.02.030) is utilized to systematically derive basis functions and priors for the parameters based on a reduced-rank GP approximation. Afterward, by calling the function `particle_Gibbs()`, samples are drawn from the posterior distribution using particle Gibbs sampling. These samples are then passed to the function `solve_PG_OCP_Altro()` (or `solve_PG_OCP_Ipopt()` in case IPOPT is used), which solves the scenario OCP using the solver Altro.
 
-A Julia script that contains all the steps described in the following and exactly reproduces Figure 2 of the paper can be found at `PGopt/Julia/examples/PG_OCP_generic_basis_functions_Altro.jl`. For the results in Table IV of the paper, this script is repeated with seeds 1:100. The runtime of the script is about 2 hours on a standard laptop. Using an improved function `phi()`, can reduce the runtime to about 50 minutes, but the results change slightly due to numerical reasons. Further explanations are given below.
+A Julia script that contains all the steps described in the following and reproduces Figure 2 of the paper can be found at `PGopt/Julia/examples/PG_OCP_generic_basis_functions_Altro.jl`. For the results in Table IV of the paper, this script is repeated with seeds 1:100. The runtime of the script is about 2 hours on a standard laptop.
 
 A similar example that utilizes the solver IPOPT can be found at `PGopt/Julia/examples/PG_OCP_generic_basis_functions_Ipopt.jl`. Due to the different solver, the results differ slightly from the ones presented in the paper.
 
@@ -43,6 +43,9 @@ n_y = 1 # number of outputs
 Then, generate generic basis functions and priors based on a reduced-rank GP approximation.
 The approach is described in the paper ["A flexible state–space model for learning nonlinear dynamical systems"](https://doi.org/10.1016/j.automatica.2017.02.030).
 The equation numbers given in the following refer to this paper.
+In this example, a GP with a squared exponential kernel
+$k(z, z') = s_f \exp (-\frac{1}{2} (z - z')^\top \Lambda^{-1} (z - z'))$,
+where $\Lambda = l^2 I$ and $I$ is the identity matrix, is approximated.
 ```julia
 n_phi_x = [5 5] # number of basis functions for each state
 n_phi_u = 5 # number of basis functions for the control input
@@ -54,10 +57,6 @@ L_u = 10 # interval length for u
 L = zeros(1, 1, n_z) # array containing the interval lengths
 L[1, 1, :] = [L_u L_x]
 
-# Hyperparameters of the squared exponential kernel
-l = [2] # length scale
-sf = 100 # scale factor
-
 # Initialize.
 j_vec = zeros(n_phi, 1, n_z) # contains all possible vectors j; j_vec[i, 1, :] corresponds to the vector j in eq. (5) for basis function i
 lambda = zeros(n_phi, n_z) # lambda[i, :] corresponds to the vector λ in eq. (9) (right-hand side) for basis function i
@@ -66,7 +65,7 @@ In the following, all possible vectors ``j`` are constructed (i.e., `j_vec`). Th
 ```julia
 cart_prod_sets = Array{Any}(undef, n_z) # array of arrays; cart_prod_sets[i] corresponds to the i-th set to be considered for the Cartesian product, i.e., [1 : n_basis[i]].
 for i = 1:n_z
-  cart_prod_sets[i] = Array(1:n_phi_dims[i])
+    cart_prod_sets[i] = Array(1:n_phi_dims[i])
 end
 
 subscript_values = Array{Int64}(undef, n_z) # contains the equivalent subscript values corresponding to a given single index i
@@ -74,63 +73,57 @@ variants = [1; cumprod(n_phi_dims[1:end-1])] # required to convert the single in
 
 # Construct Cartesian product and calculate spectral densities.
 for i in 1:n_phi
-  # Convert the single index i to the equivalent subscript values.
-  remaining = i - 1
-  for j in n_z:-1:1
-    subscript_values[j] = floor(remaining / variants[j]) + 1
-    remaining = mod(remaining, variants[j])
-  end
+    # Convert the single index i to the equivalent subscript values.
+    remaining = i - 1
+    for j in n_z:-1:1
+        subscript_values[j] = floor(remaining / variants[j]) + 1
+        remaining = mod(remaining, variants[j])
+    end
 
-  # Fill j_vec with the values belonging to the respective subscript indices.
-  for j in 1:n_z
-    j_vec[i, 1, j] = cart_prod_sets[j][subscript_values[j]]
-  end
+    # Fill j_vec with the values belonging to the respective subscript indices.
+    for j in 1:n_z
+        j_vec[i, 1, j] = cart_prod_sets[j][subscript_values[j]]
+    end
 
-  # Calculate the eigenvalue of the Laplace operator corresponding to the vector j_vec[i, 1, :] - see eq. (9) (right-hand side).
-  lambda[i, :] = (pi .* j_vec[i, 1, :] ./ (2 * dropdims(L, dims=tuple(findall(size(L) .== 1)...)))) .^ 2
+    # Calculate the eigenvalue of the Laplace operator corresponding to the vector j_vec[i, 1, :] - see eq. (9) (right-hand side).
+    lambda[i, :] = (pi .* j_vec[i, 1, :] ./ (2 * dropdims(L, dims=tuple(findall(size(L) .== 1)...)))) .^ 2
 end
 
 # Reverse j_vec.
 j_vec = reverse(j_vec, dims=3)
 ```
 Then, define basis functions phi. This function evaluates ``\phi_{1 : n_x+n_u}`` according to eq. (5).
-There are two implementations of the phi function.
-### Original implementation
-This implementation is the original implementation, which is slow but exactly reproduces the results given in the paper.
-```julia
-function phi_sampling(x, u)
-  # Initialize.
-  z = vcat(u, x) # augmented state
-  phi = Array{Float64}(undef, n_phi, size(z, 2))
-
-  Threads.@threads for i in axes(z, 2)
-    phi_temp = ones(n_phi)
-    for k in axes(z, 1)
-      phi_temp .= phi_temp .* ((1 ./ (sqrt.(L[:, :, k]))) .* sin.((pi .* j_vec[:, :, k] .* (z[k, i] .+ L[:, :, k])) ./ (2 .* L[:, :, k])))
-    end
-    phi[:, i] .= phi_temp
-  end
-  return phi
-end
-```
-### Efficient implementation
-After the paper's publication, a much more efficient implementation was found, which, for numerical reasons, produces slightly different results (differences in the range ``1\cdot 10^{-16}`` when called once). 
-However, these minimal deviations lead to noticeably different results since the function phi is called recursively ``T \cdot N \cdot K_{\mathrm{total}}`` times (= very often). 
-This is the improved implementation, which is significantly faster but yields slightly different results.
 ```julia
 # Precompute.
 L_sqrt_inv = 1 ./ sqrt.(L)
 pi_j_over_2L = pi .* j_vec ./ (2 .* L)
 function phi_sampling(x, u)
-  # Initialize.
-  z = vcat(u, x) # augmented state
-  phi = ones(n_phi, size(z, 2))
+    # Initialize.
+    z = vcat(u, x) # augmented state
+    phi = ones(n_phi, size(z, 2))
 
-  for k in axes(z, 1)
-    phi .= phi .* (L_sqrt_inv[:, :, k] .* sin.(pi_j_over_2L[:, :, k] * (z[k, :] .+ L[:, :, k])'))
-  end
+    for k in axes(z, 1)
+        phi .= phi .* (L_sqrt_inv[:, :, k] .* sin.(pi_j_over_2L[:, :, k] * (z[k, :] .+ L[:, :, k])'))
+    end
 
-  return phi
+    return phi
+end
+```
+Since the optimization cannot deal with multithreading or in-place computations, a less efficient definition of phi is required for the subsequent optimization.
+```julia
+function phi_opt(x, u)
+    # Initialize.
+    z = vcat(u, x) # augmented state
+    phi = Array{Any}(undef, n_phi, size(z, 2))
+
+    for i in axes(z, 2)
+        phi_temp = ones(n_phi)
+        for k in axes(z, 1)
+            phi_temp = phi_temp .* ((1 ./ (sqrt.(L[:, :, k]))) .* sin.((pi .* j_vec[:, :, k] .* (z[k, i] .+ L[:, :, k])) ./ (2 .* L[:, :, k])))
+        end
+        phi[:, i] = phi_temp
+    end
+    return phi
 end
 ```
 ## Define prior
@@ -140,13 +133,18 @@ ell_Q = 10 # degrees of freedom
 Lambda_Q = 100 * I(n_x) # scale matrix
 ```
 Determine the parameters of the matrix normal prior (with mean matrix ``0``, right covariance matrix ``Q`` (see above), and left covariance matrix ``V``) for ``A``.
-``V`` is derived from the GP approximation according to eq. (8b), (11a), and (9).
+``V`` is derived from the GP approximation according to eq. (8b), (9).
+The spectral density of the anisotropic squared exponential kernel 
+$k(z, z') = s_f \exp (-\frac{1}{2} (z - z')^\top \Lambda^{-1} (z - z'))$
+is
+$S(\omega) = s_f (2 \pi)^{\frac{d}{2}} |\Lambda|^{\frac{1}{2}} \exp(-\frac{\omega^\top \Lambda \omega}{2})$; 
+see eq. (68) in the paper ["Hilbert space methods for reduced-rank Gaussian process regression"](https://doi.org/10.1007/s11222-019-09886-w).
 ```julia
-V_diagonal = Array{Float64}(undef, size(lambda, 1)) # diagonal of V
+V_diag = Array{Float64}(undef, size(lambda, 1)) # diagonal of V
 for i in axes(lambda, 1)
-  V_diagonal[i] = sf^2 * sqrt(opnorm(2 * pi * Diagonal(repeat(l, trunc(Int, n_z / size(l, 1))) .^ 2))) * exp.(-(pi^2 * transpose(sqrt.(lambda[i, :])) * Diagonal(repeat(l, trunc(Int, n_z / size(l, 1))) .^ 2) * sqrt.(lambda[i, :])) / 2)
+    V_diag[i] = sf * ((2 * pi)^(n_z / 2)) * prod(l) * exp(-0.5 * sum((l .^ 2) .* lambda[i, :]))
 end
-V = Diagonal(V_diagonal)
+V = Diagonal(V_diag)
 ```
 Provide an initial guess for the parameters.
 ```julia
@@ -207,10 +205,11 @@ y_test = y[:, T+1:end]
 ## Infer model
 Run the particle Gibbs sampler to jointly estimate the model parameters and the latent state trajectory.
 ```julia
-PG_samples = particle_Gibbs(u_training, y_training, K, K_b, k_d, N, phi, Lambda_Q, ell_Q, Q_init, V, A_init, x_init_dist, g, R)
+PG_samples = particle_Gibbs(u_training, y_training, K, K_b, k_d, N, phi_sampling, Lambda_Q, ell_Q, Q_init, V, A_init, x_init_dist, g, R)
 
 time_sampling = time() - sampling_timer
 ```
+
 ## Define and solve optimal control problem using Altro
 In the following, the optimal control problem is defined and solved using the solver Altro. An example using the solver IPOPT is given in the next section.
 With the Altro solver, problems of the following form can be solved
@@ -229,7 +228,7 @@ u_t &\leq u_{\mathrm{max},\ t}.
 \end{aligned}
 ```
 
-(Note that the output constraints imply the measurement function ``y_t^{[k]} = x_{t, 1:n_y}^{[k]}``.)
+(Note that the output constraints imply the measurement function ``y_t^{[k]} = x_{t, 1:n_y}^{[k]}``)
 ```julia
 # Horizon
 H = 41
@@ -388,7 +387,7 @@ Ipopt_options = Dict("max_iter" => 10000, "tol" => 1e-8, "hsllib" => HSL_jll.lib
 Solve the optimal control problem using the solver IPOPT. In this case, no formal guarantees for the constraint satisfaction can be derived since Assumption 1 is not satisfied as the employed basis functions cannot represent the actual dynamics with arbitrary precision.
 Since the cost function depends only on the control inputs ``u_{0:H}``, the optional argument `J_u` is set to `true`.
 ```julia
-u_opt, x_opt, y_opt, J_opt, solve_successful, iterations, mu = solve_PG_OCP_Ipopt(PG_samples, phi, g, R, H, cost_function, bounded_output, bounded_input; J_u=true, K_pre_solve=20, solver_opts=Ipopt_options)
+u_opt, x_opt, y_opt, J_opt, solve_successful, iterations, mu = solve_PG_OCP_Ipopt(PG_samples, phi_opt, g, R, H, cost_function, bounded_output, bounded_input; J_u=true, K_pre_solve=20, solver_opts=Ipopt_options)
 ```
 Finally, apply the input trajectory to the actual system and plot the output trajectories.
 ```julia
