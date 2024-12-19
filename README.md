@@ -30,12 +30,15 @@ It has come to our attention that the hyperparameters reported in the example wi
 
 ### Corrected Kernel Definition
 The squared exponential kernel is now defined as
+
 $k(z, z') = s_f \exp (-\frac{1}{2} (z - z')^\top \Lambda^{-1} (z - z'))$,
+
 where $\Lambda = l^2 I$, and $I$ is the identity matrix. 
 
 This updated definition ensures consistency with the general literature. Using this definition, the hyperparameters for the example in Section V-C (Table III) of the paper are:
 * $l = 2\pi \approx 6.28$ 
 * $s_f = \frac{100^2}{8\pi^4} \approx 12.83$
+
 All other parameters in Table III remain unchanged. 
 
 The updated definition may result in small numerical differences (e.g., due to rounding or recalculation) compared to the original results presented in the paper. These differences are minor and do not impact the overall findings or conclusions.
