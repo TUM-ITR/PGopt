@@ -49,6 +49,13 @@ If you wish to reproduce the exact results from the paper, you can pull an earli
 git checkout v0.2.1
 ```
 
+## Erratum: Initialization of the scenario optimal control problem in Section V
+It has come to our attention that the same set of scenarios is used both to compute an initial guess and to formulate the scenario optimal control problem. This conflicts with the assumptions of scenario theory. The issue can be resolved by drawing an independent scenario set for the initialization.
+
+As the initialization procedure is not described in the paper, the theoretical results remain unaffected. However, the numerical experiments presented in the paper are affected. In particular, the reported runtimes may be optimistic, as drawing additional samples for an independent initialization set would increase the total computational effort. Robustness levels are not expected to be significantly impacted.
+
+This issue has been acknowledged and will be addressed in a future release.
+
 ## Reference
 If you found this software useful for your research, consider citing us.
 ```
